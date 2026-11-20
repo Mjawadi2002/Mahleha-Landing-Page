@@ -5,6 +5,8 @@
 import * as THREE from 'three';
 import { feature } from 'topojson-client';
 import land50 from 'world-atlas/land-50m.json';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { buildAirliner } from './plane.js';
 import { TOUR, haversineKm } from './places.js';
 export { haversineKm };
 
@@ -61,9 +63,15 @@ function buildLandCanvas(pxPerDeg) {
   const toPx = ([lon, lat]) => [((lon - BBOX.w) * KX) * pxPerDeg, (BBOX.n - lat) * pxPerDeg];
   const land = feature(land50, land50.objects.land);
   const rings = [];
+  const polysOut = []; // [outer, ...holes] in pixels, for the raised land
   for (const f of land.features) {
     const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
     for (const poly of polys) {
+      const inBoxP = poly[0].some(([x, y]) => x > BBOX.w - 3 && x < BBOX.e + 3 && y > BBOX.s - 3 && y < BBOX.n + 3);
+      if (inBoxP) {
+        const parts = poly.map((r) => clipRing(r)).filter((r) => r.length > 2).map((r) => r.map(toPx));
+        if (parts.length && clipRing(poly[0]).length > 2) polysOut.push(parts);
+      }
       for (const ring of poly) {
         const inBox = ring.some(([x, y]) => x > BBOX.w - 3 && x < BBOX.e + 3 && y > BBOX.s - 3 && y < BBOX.n + 3);
         if (!inBox) continue;
@@ -72,38 +80,87 @@ function buildLandCanvas(pxPerDeg) {
       }
     }
   }
-  return { canvas: c, ctx: g, rings, W, H };
+  return { canvas: c, ctx: g, rings, polys: polysOut, W, H };
 }
 
 // Two map moods: Tunisian night (outbound) and the Aegean (on the way back).
 export const MAP_THEMES = {
   tn: { seaIn: '#142a40', seaOut: '#0b1a2a', land: '#1c2b46', coast: 'rgba(226,234,246,0.44)', glow: 'rgba(111,216,191,0.30)',
-    bg: 0x0b1a2a, route: 0x6fd8bf, accent: 0xc93460, dots: 0xf5f1ea, tunis: 0xd23a5f, athens: 0x6fd8bf },
+    bg: 0x0b1a2a, route: 0x6fd8bf, accent: 0xc93460, dots: 0xf5f1ea, tunis: 0xd23a5f, athens: 0x6fd8bf,
+    deep: 0x0a1726, shallow: 0x1b4a5a, sky: 0x2a4a66, landTop: 0x0f1a2c, landSide: 0x070d18, coastLight: 0x9fe8d6 },
   gr: { seaIn: '#16457a', seaOut: '#0a2343', land: '#1c4a7e', coast: 'rgba(225,240,255,0.55)', glow: 'rgba(159,211,255,0.32)',
-    bg: 0x0a2343, route: 0x9fd3ff, accent: 0x2371d4, dots: 0xf3f7fc, tunis: 0xd23a5f, athens: 0x9fd3ff },
+    bg: 0x0a2343, route: 0x9fd3ff, accent: 0x2371d4, dots: 0xf3f7fc, tunis: 0xd23a5f, athens: 0x9fd3ff,
+    deep: 0x0a2140, shallow: 0x2a78b8, sky: 0x5d9fd8, landTop: 0x0f2c52, landSide: 0x061529, coastLight: 0xd6ecff },
 };
 
-function landTexture(rings, W, H, pal = MAP_THEMES.tn) {
-  const c = document.createElement('canvas');
-  c.width = W; c.height = H;
+
+function coastMap(rings, W, H) {
+  // black everywhere, a soft bright coastline: used as the land's emissive map
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
-  // sea
-  const sea = g.createRadialGradient(W * 0.55, H * 0.55, 0, W * 0.55, H * 0.55, W * 0.7);
-  sea.addColorStop(0, pal.seaIn);
-  sea.addColorStop(1, pal.seaOut);
-  g.fillStyle = sea; g.fillRect(0, 0, W, H);
-  // land fill (evenodd keeps lakes as holes)
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
   g.beginPath();
   for (const r of rings) { g.moveTo(r[0][0], r[0][1]); for (const p of r) g.lineTo(p[0], p[1]); g.closePath(); }
-  g.fillStyle = pal.land;
-  g.fill('evenodd');
-  // coast glow + line
-  g.save();
-  g.shadowColor = pal.glow; g.shadowBlur = W / 400;
-  g.strokeStyle = pal.coast; g.lineWidth = Math.max(1, W / 2600);
-  g.stroke();
-  g.restore();
+  g.save(); g.shadowColor = 'rgba(255,255,255,0.55)'; g.shadowBlur = W / 300;
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = Math.max(1.2, W / 2200); g.stroke(); g.restore();
   return c;
+}
+
+function shoreMask(rings, W, H) {
+  // a blurred land mask: shallow water glows along every coast
+  const s = 1024 / W; const w = 1024; const h = Math.round(H * s);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  g.beginPath();
+  for (const r of rings) { g.moveTo(r[0][0] * s, r[0][1] * s); for (const p of r) g.lineTo(p[0] * s, p[1] * s); g.closePath(); }
+  g.filter = 'blur(10px)'; g.fillStyle = '#fff'; g.fill('evenodd');
+  g.filter = 'blur(3px)'; g.fill('evenodd');
+  return c;
+}
+
+function raisedLand(polys, pxPerDeg, depth) {
+  // extrude the real coastline polygons into a thin landmass
+  const toXY = ([px, py]) => new THREE.Vector2((BBOX.w - 16) * KX + px / pxPerDeg, BBOX.n - 37 - py / pxPerDeg);
+  const thin = (ring) => {
+    const out = []; let last = null;
+    for (const pt of ring) { const v = toXY(pt); if (!last || v.distanceTo(last) > 0.012) { out.push(v); last = v; } }
+    return out;
+  };
+  const shapes = [];
+  for (const [outer, ...holes] of polys) {
+    const o = thin(outer); if (o.length < 3) continue;
+    const sh = new THREE.Shape(o);
+    for (const hRing of holes) { const hh = thin(hRing); if (hh.length > 2) sh.holes.push(new THREE.Path(hh)); }
+    shapes.push(sh);
+  }
+  const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: false, steps: 1, curveSegments: 1 });
+  geo.rotateX(-Math.PI / 2);
+  // map UVs onto the map rectangle so the coast texture lines up
+  const x0 = lonToX(BBOX.w); const z0 = latToZ(BBOX.n);
+  const mapW = (BBOX.e - BBOX.w) * KX; const mapH = BBOX.n - BBOX.s;
+  const pos = geo.attributes.position; const uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) - x0) / mapW, 1 - (pos.getZ(i) - z0) / mapH);
+  uv.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function cumulusTexture(seed) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 160;
+  const g = c.getContext('2d');
+  let r = seed; const rnd = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
+  for (let i = 0; i < 14; i++) {
+    const x = 50 + rnd() * 156; const y = 70 + rnd() * 40 - (Math.abs(x - 128) < 50 ? 25 * rnd() : 0); const rad = 26 + rnd() * 34;
+    const gr = g.createRadialGradient(x, y - rad * 0.3, rad * 0.1, x, y, rad);
+    gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.55, 'rgba(236,242,250,0.6)'); gr.addColorStop(1, 'rgba(220,230,244,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+  }
+  // soft shaded underside
+  const sh = g.createLinearGradient(0, 80, 0, 150);
+  sh.addColorStop(0, 'rgba(120,140,170,0)'); sh.addColorStop(1, 'rgba(120,140,170,0.35)');
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = sh; g.fillRect(0, 0, 256, 160);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
 function landDots(rings, W, H, pxPerDeg) {
@@ -123,7 +180,7 @@ function landDots(rings, W, H, pxPerDeg) {
       const x = Math.round((lon - BBOX.w) * KX * pxPerDeg);
       const y = Math.round((BBOX.n - lat) * pxPerDeg);
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
-      if (data[(y * W + x) * 4] > 128) { pts.push(lonToX(lon), 0.012, latToZ(lat)); seeds.push(Math.random()); }
+      if (data[(y * W + x) * 4] > 128) { pts.push(lonToX(lon), LAND_H + 0.004, latToZ(lat)); seeds.push(Math.random()); }
     }
   }
   const geo = new THREE.BufferGeometry();
@@ -132,35 +189,8 @@ function landDots(rings, W, H, pxPerDeg) {
   return geo;
 }
 
-// ---------- plane ----------
-function buildPlane() {
-  const g = new THREE.Group();
-  const cream = new THREE.MeshStandardMaterial({ color: 0xeef2f8, roughness: 0.45, metalness: 0.1 });
-  const terra = new THREE.MeshStandardMaterial({ color: 0xc93460, roughness: 0.6 });
-  terra.name = 'accent';
-  const accentMat = terra;
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.42, 6, 16), cream);
-  body.rotation.x = Math.PI / 2;
-  g.add(body);
-  const wingShape = new THREE.Shape();
-  wingShape.moveTo(0, 0.07); wingShape.lineTo(0.36, -0.06); wingShape.lineTo(0.36, -0.12); wingShape.lineTo(0, -0.05);
-  wingShape.lineTo(-0.36, -0.12); wingShape.lineTo(-0.36, -0.06); wingShape.closePath();
-  const wing = new THREE.Mesh(new THREE.ExtrudeGeometry(wingShape, { depth: 0.012, bevelEnabled: false }), cream);
-  wing.rotation.x = -Math.PI / 2; wing.position.set(0, -0.005, 0.02);
-  g.add(wing);
-  const tailShape = new THREE.Shape();
-  tailShape.moveTo(0, 0.02); tailShape.lineTo(0.13, -0.05); tailShape.lineTo(0.13, -0.08); tailShape.lineTo(0, -0.05);
-  tailShape.lineTo(-0.13, -0.08); tailShape.lineTo(-0.13, -0.05); tailShape.closePath();
-  const tail = new THREE.Mesh(new THREE.ExtrudeGeometry(tailShape, { depth: 0.01, bevelEnabled: false }), cream);
-  tail.rotation.x = -Math.PI / 2; tail.position.set(0, 0.005, 0.24);
-  g.add(tail);
-  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.09, 0.09), terra);
-  fin.position.set(0, 0.05, 0.25); fin.rotation.x = -0.35;
-  g.add(fin);
-  g.scale.setScalar(0.85);
-  g.userData.accent = accentMat;
-  return g;
-}
+const LAND_H = 0.022; // height of the raised land
+
 
 function glowTexture(inner = 'rgba(255,255,255,1)') {
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -177,33 +207,89 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x0b1a2a, 1);
+  const shadows = !reduced && window.innerWidth >= 700;
+  renderer.shadowMap.enabled = shadows;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x0b1a2a, 9, 26);
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 80);
 
-  scene.add(new THREE.HemisphereLight(0xf5f1ea, 0x0b1a2a, 1.4));
-  const sun = new THREE.DirectionalLight(0xe6eefc, 2.2);
-  sun.position.set(-4, 6, 3); scene.add(sun);
+  // a soft studio environment gives the paint real reflections
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.add(new THREE.HemisphereLight(0xdfe8f5, 0x0b1a2a, 0.7));
+  const SUN_DIR = new THREE.Vector3(-4, 6, 3).normalize();
+  const sun = new THREE.DirectionalLight(0xf2f5fb, 2.4);
+  sun.position.copy(SUN_DIR).multiplyScalar(6); scene.add(sun); scene.add(sun.target);
+  if (shadows) {
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    Object.assign(sun.shadow.camera, { left: -1.4, right: 1.4, top: 1.4, bottom: -1.4, near: 0.5, far: 20 });
+    sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
+  }
 
   // Land plane
   const pxPerDeg = Math.min(110, renderer.capabilities.maxTextureSize / ((BBOX.e - BBOX.w) * KX));
-  const { rings, W, H } = buildLandCanvas(pxPerDeg);
-  const tex = new THREE.CanvasTexture(landTexture(rings, W, H, MAP_THEMES.tn));
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const texGr = new THREE.CanvasTexture(landTexture(rings, W, H, MAP_THEMES.gr));
-  texGr.colorSpace = THREE.SRGBColorSpace;
-  texGr.anisotropy = tex.anisotropy;
+  const { rings, polys, W, H } = buildLandCanvas(pxPerDeg);
   const mapW = (BBOX.e - BBOX.w) * KX; const mapH = BBOX.n - BBOX.s;
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(mapW, mapH), new THREE.MeshBasicMaterial({ map: tex }));
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set(lonToX((BBOX.w + BBOX.e) / 2), 0, latToZ((BBOX.s + BBOX.n) / 2));
-  scene.add(ground);
-  // the Aegean version of the same map, faded in on the way back
-  const groundGr = new THREE.Mesh(ground.geometry, new THREE.MeshBasicMaterial({ map: texGr, transparent: true, opacity: 0, depthWrite: false }));
-  groundGr.rotation.x = -Math.PI / 2; groundGr.position.copy(ground.position); groundGr.position.y += 0.002;
-  scene.add(groundGr);
+  const center = new THREE.Vector3(lonToX((BBOX.w + BBOX.e) / 2), 0, latToZ((BBOX.s + BBOX.n) / 2));
+
+  // the sea: a live water surface with shallows along the coasts, small waves and sun glints
+  const shoreTex = new THREE.CanvasTexture(shoreMask(rings, W, H));
+  const seaMat = new THREE.ShaderMaterial({
+    fog: true,
+    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
+      uDeep: { value: new THREE.Color(MAP_THEMES.tn.deep) }, uShallow: { value: new THREE.Color(MAP_THEMES.tn.shallow) },
+      uSky: { value: new THREE.Color(MAP_THEMES.tn.sky) }, uSun: { value: SUN_DIR.clone() }, uTime: { value: 0 }, uShore: { value: null },
+    }]),
+    vertexShader: `varying vec2 vUv; varying vec3 vWorld;
+      #include <fog_pars_vertex>
+      void main(){ vUv = uv; vec4 wp = modelMatrix * vec4(position, 1.0); vWorld = wp.xyz; vec4 mvPosition = viewMatrix * wp; gl_Position = projectionMatrix * mvPosition;
+      #include <fog_vertex>
+      }`,
+    fragmentShader: `uniform vec3 uDeep; uniform vec3 uShallow; uniform vec3 uSky; uniform vec3 uSun; uniform float uTime; uniform sampler2D uShore;
+      varying vec2 vUv; varying vec3 vWorld;
+      #include <fog_pars_fragment>
+      float h(vec2 p){ return sin(p.x*1.7 + uTime*0.55)*0.5 + sin(p.y*2.3 - uTime*0.42)*0.5 + sin((p.x+p.y)*3.7 + uTime*0.9)*0.22 + sin((p.x-p.y)*6.1 - uTime*1.25)*0.11 + sin(p.x*11.0 + p.y*7.0 + uTime*1.7)*0.05; }
+      void main(){
+        vec2 p = vWorld.xz * 7.0; float e = 0.03;
+        float dx = (h(p + vec2(e,0.0)) - h(p - vec2(e,0.0))) / (2.0*e);
+        float dz = (h(p + vec2(0.0,e)) - h(p - vec2(0.0,e))) / (2.0*e);
+        vec3 n = normalize(vec3(-dx*0.035, 1.0, -dz*0.035));
+        vec3 V = normalize(cameraPosition - vWorld);
+        float shore = texture2D(uShore, vUv).r;
+        vec3 col = mix(uDeep, uShallow, shore * 0.85);
+        float fres = pow(1.0 - max(dot(n, V), 0.0), 4.0);
+        col = mix(col, uSky, fres * 0.55);
+        vec3 R = reflect(-uSun, n);
+        float spec = pow(max(dot(R, V), 0.0), 180.0);
+        float glint = pow(max(dot(R, V), 0.0), 900.0) * step(0.6, fract(sin(dot(floor(vWorld.xz*90.0), vec2(12.9898,78.233)))*43758.5453));
+        col += vec3(1.0) * (spec * 0.35 + glint * 1.2);
+        gl_FragColor = vec4(col, 1.0);
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`,
+  });
+  seaMat.uniforms.uShore.value = shoreTex;
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(mapW, mapH), seaMat);
+  sea.rotation.x = -Math.PI / 2; sea.position.copy(center);
+  scene.add(sea);
+
+  // the land: real coastline polygons, raised, lit by the sun, with a glowing shoreline
+  const coastTex = new THREE.CanvasTexture(coastMap(rings, W, H));
+  coastTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const landTop = new THREE.MeshStandardMaterial({ color: MAP_THEMES.tn.landTop, roughness: 0.95, metalness: 0, emissive: MAP_THEMES.tn.coastLight, emissiveMap: coastTex, emissiveIntensity: 0.6, envMapIntensity: 0.06 });
+  const landSide = new THREE.MeshStandardMaterial({ color: MAP_THEMES.tn.landSide, roughness: 1, metalness: 0, envMapIntensity: 0.04 });
+  const land = new THREE.Mesh(raisedLand(polys, pxPerDeg, LAND_H), [landTop, landSide]);
+  land.receiveShadow = shadows;
+  scene.add(land);
+
+  // catches the plane's shadow on the water
+  const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(mapW, mapH), new THREE.ShadowMaterial({ color: 0x000610, opacity: 0.38 }));
+  shadowCatcher.rotation.x = -Math.PI / 2; shadowCatcher.position.copy(center); shadowCatcher.position.y = 0.0015;
+  shadowCatcher.receiveShadow = true; shadowCatcher.visible = shadows;
+  scene.add(shadowCatcher);
 
   // Halftone land dots
   const dotGeo = landDots(rings, W, H, pxPerDeg);
@@ -239,14 +325,34 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   ghost.computeLineDistances(); scene.add(ghost);
 
   // Ground shadow of the route
-  const shadowPts = routePts.map((p) => new THREE.Vector3(p.x, 0.01, p.z));
+  const shadowPts = routePts.map((p) => new THREE.Vector3(p.x, LAND_H + 0.002, p.z));
   const shadowGeo = new THREE.BufferGeometry().setFromPoints(shadowPts);
   const shadow = new THREE.Line(shadowGeo, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 }));
   scene.add(shadow);
 
   // Plane
-  const plane = buildPlane();
+  const plane = buildAirliner({ shadows });
   scene.add(plane);
+  // glow halos on the navigation lights
+  const navGlow = {};
+  for (const [k, m] of Object.entries(plane.userData.lights)) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,1)'), color: m.material.color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    sp.scale.setScalar(k === 'strobe' ? 0.09 : 0.05); m.add(sp); navGlow[k] = sp;
+  }
+  // contrails from both engines
+  const TRAIL = 80;
+  const trails = plane.userData.engines.map(() => {
+    const posArr = new Float32Array(TRAIL * 3); const alpha = new Float32Array(TRAIL);
+    for (let i = 0; i < TRAIL; i++) alpha[i] = 1 - i / (TRAIL - 1);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3)); geo.setAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
+    const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uOpacity: { value: 0 } },
+      vertexShader: 'attribute float alpha; varying float vA; void main(){ vA = alpha; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: 'uniform float uOpacity; varying float vA; void main(){ gl_FragColor = vec4(0.94,0.97,1.0, vA * vA * uOpacity); }' });
+    const line = new THREE.Line(geo, mat); line.frustumCulled = false; scene.add(line);
+    return { posArr, geo, mat, filled: false };
+  });
+  const engW = new THREE.Vector3();
   const trailGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,0.9)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   trailGlow.scale.setScalar(0.5); scene.add(trailGlow);
 
@@ -265,9 +371,9 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     const grp = new THREE.Group(); grp.position.copy(pos);
     const r0 = p.tour ? 0.03 : 0.06;
     const dot = new THREE.Mesh(new THREE.CircleGeometry(r0, 24), new THREE.MeshBasicMaterial({ color: COLORS[key] ?? 0x6fd8bf, transparent: true }));
-    dot.rotation.x = -Math.PI / 2; dot.position.y = 0.02; grp.add(dot);
+    dot.rotation.x = -Math.PI / 2; dot.position.y = LAND_H + 0.008; grp.add(dot);
     const ring = new THREE.Mesh(new THREE.PlaneGeometry(r0 * 8, r0 * 8), new THREE.MeshBasicMaterial({ map: ringTex, color: COLORS[key] ?? 0x6fd8bf, transparent: true, depthWrite: false }));
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.021; grp.add(ring);
+    ring.rotation.x = -Math.PI / 2; ring.position.y = LAND_H + 0.009; grp.add(ring);
     scene.add(grp);
     const el = document.createElement('div');
     el.className = 'map-label';
@@ -286,7 +392,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     const lift = Math.max(0.12, a.distanceTo(b) * 0.35);
     for (let j = i === 1 ? 0 : 1; j <= SEG; j++) {
       const u = j / SEG;
-      const v = a.clone().lerp(b, u); v.y = 0.03 + Math.sin(Math.PI * u) * lift;
+      const v = a.clone().lerp(b, u); v.y = LAND_H + 0.02 + Math.sin(Math.PI * u) * lift;
       tourPts.push(v);
     }
   });
@@ -302,15 +408,15 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const headPos = new THREE.Vector3();
 
   // Clouds: soft sprites layered at cruising height
-  const cloudTex = glowTexture('rgba(232,238,248,0.55)');
+  const cloudTexs = [cumulusTexture(7), cumulusTexture(19), cumulusTexture(43), cumulusTexture(97)];
   const clouds = [];
-  for (let i = 0; i < 60; i++) {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, opacity: 0 }));
+  for (let i = 0; i < 44; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTexs[i % cloudTexs.length], transparent: true, depthWrite: false, opacity: 0 }));
     const u = Math.random();
     const base = curve.getPoint(u);
     s.position.set(base.x + (Math.random() - 0.5) * 5, base.y - 0.2 + Math.random() * 0.5, base.z + (Math.random() - 0.5) * 3);
-    const sc = 0.8 + Math.random() * 1.8; s.scale.set(sc * 1.8, sc, 1);
-    s.userData = { o: 0.25 + Math.random() * 0.35, drift: 0.02 + Math.random() * 0.04 };
+    const sc = 0.7 + Math.random() * 1.6; s.scale.set(sc * 1.6, sc, 1);
+    s.userData = { o: 0.12 + Math.random() * 0.22, drift: 0.02 + Math.random() * 0.04 };
     scene.add(s); clouds.push(s);
   }
 
@@ -327,7 +433,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     theme: 0, // 0 = Tunisian night, 1 = Aegean (set by the page when the visitor heads back)
   };
   const TH = { tn: {}, gr: {} };
-  for (const k of ['bg', 'route', 'accent', 'dots', 'athens']) { TH.tn[k] = new THREE.Color(MAP_THEMES.tn[k]); TH.gr[k] = new THREE.Color(MAP_THEMES.gr[k]); }
+  for (const k of ['bg', 'route', 'accent', 'dots', 'athens', 'deep', 'shallow', 'sky', 'landTop', 'landSide', 'coastLight']) { TH.tn[k] = new THREE.Color(MAP_THEMES.tn[k]); TH.gr[k] = new THREE.Color(MAP_THEMES.gr[k]); }
   const mixC = new THREE.Color();
   let themeK = 0; let themeInit = false;
   trailGlow.material.color.set(MAP_THEMES.tn.route);
@@ -408,7 +514,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     // clouds
     for (const c of clouds) {
       // fade clouds that drift right in front of the lens so text stays readable
-      const near = THREE.MathUtils.smoothstep(c.position.distanceTo(camera.position), 0.8, 2.6);
+      const near = THREE.MathUtils.smoothstep(c.position.distanceTo(camera.position), 1.2, 3.4);
       c.material.opacity = c.userData.o * state.clouds * near;
       if (!reduced) c.position.x -= c.userData.drift * 0.016;
     }
@@ -447,14 +553,40 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
       themeInit = true;
       const k = themeK;
       mixC.lerpColors(TH.tn.bg, TH.gr.bg, k); renderer.setClearColor(mixC, 1); scene.fog.color.copy(mixC);
-      groundGr.material.opacity = k;
+      seaMat.uniforms.uDeep.value.lerpColors(TH.tn.deep, TH.gr.deep, k);
+      seaMat.uniforms.uShallow.value.lerpColors(TH.tn.shallow, TH.gr.shallow, k);
+      seaMat.uniforms.uSky.value.lerpColors(TH.tn.sky, TH.gr.sky, k);
+      landTop.color.lerpColors(TH.tn.landTop, TH.gr.landTop, k);
+      landTop.emissive.lerpColors(TH.tn.coastLight, TH.gr.coastLight, k);
+      landSide.color.lerpColors(TH.tn.landSide, TH.gr.landSide, k);
       mixC.lerpColors(TH.tn.route, TH.gr.route, k);
       routeMat.color.copy(mixC); tourMat.color.copy(mixC); trailGlow.material.color.copy(mixC); tourHead.material.color.copy(mixC);
       mixC.lerpColors(TH.tn.athens, TH.gr.athens, k);
       for (const [key, m] of Object.entries(markers)) if (key === 'athens' || m.tour) { m.dot.material.color.copy(mixC); m.ring.material.color.copy(mixC); }
-      plane.userData.accent?.color.lerpColors(TH.tn.accent, TH.gr.accent, k);
+      const kq = Math.round(k * 8) / 8; // repaint the livery in a few steps, not every frame
+      plane.userData.setAccent(mixC.lerpColors(TH.tn.accent, TH.gr.accent, kq));
       dotMat.uniforms.uColor.value.lerpColors(TH.tn.dots, TH.gr.dots, k);
     }
+
+    // navigation lights: steady red/green, white strobe and red beacon blinking
+    const L = plane.userData.lights;
+    L.strobe.visible = (time % 1.3) < 0.07 || ((time + 0.18) % 1.3) < 0.05;
+    L.belly.visible = ((time + 0.65) % 1.3) < 0.12;
+    // contrails: push the engines' world positions into each trail while flying
+    const flying = plane.visible && state.overview < 0.95;
+    trails.forEach((tr, i) => {
+      engW.copy(plane.userData.engines[i]); plane.localToWorld(engW);
+      const a = tr.posArr;
+      if (!tr.filled) { for (let j = 0; j < TRAIL; j++) a.set([engW.x, engW.y, engW.z], j * 3); tr.filled = true; }
+      const moved = Math.hypot(a[0] - engW.x, a[1] - engW.y, a[2] - engW.z) > 0.006;
+      if (moved) { a.copyWithin(3, 0, (TRAIL - 1) * 3); }
+      a[0] = engW.x; a[1] = engW.y; a[2] = engW.z;
+      tr.geo.attributes.position.needsUpdate = true;
+      tr.mat.uniforms.uOpacity.value += (((flying ? 0.5 : 0) * (1 - state.overview)) - tr.mat.uniforms.uOpacity.value) * 0.1;
+    });
+    // keep the sun's shadow box on the plane
+    if (shadows) { sun.position.copy(plane.position).addScaledVector(SUN_DIR, 6); sun.target.position.copy(plane.position); sun.target.updateMatrixWorld(); }
+    seaMat.uniforms.uTime.value = reduced ? 0 : time;
 
     dotMat.uniforms.uTime.value = time;
     renderer.render(scene, camera);

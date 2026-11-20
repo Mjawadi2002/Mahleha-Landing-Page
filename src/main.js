@@ -439,6 +439,16 @@ ScrollTrigger.create({
 
 // ---------- pilot steps light up one after another along the rail ----------
 const psteps = $$('.psteps li');
+// the rail runs exactly from the first step's icon to the last one's
+function fitRail() {
+  const rail = $('.ps-rail'); const box = $('.psteps').getBoundingClientRect();
+  const dots = $$('.ps-dot').map((d) => d.getBoundingClientRect());
+  if (!dots.length || !rail) return;
+  const first = dots[0]; const last = dots[dots.length - 1];
+  const x0 = first.left + first.width / 2; const x1 = last.left + last.width / 2;
+  Object.assign(rail.style, { left: `${x0 - box.left}px`, right: 'auto', width: `${Math.max(0, x1 - x0)}px`, top: `${first.top + first.height / 2 - box.top - 1}px` });
+}
+fitRail(); addEventListener('resize', fitRail); ScrollTrigger.addEventListener('refresh', fitRail);
 ScrollTrigger.create({
   trigger: '.psteps', start: 'top 80%', end: 'bottom 45%', scrub: true,
   onUpdate: (self) => {
