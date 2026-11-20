@@ -1,6 +1,9 @@
 import '@fontsource/lora/latin-400.css';
 import '@fontsource/lora/latin-400-italic.css';
 import '@fontsource/lora/latin-600.css';
+import '@fontsource/fraunces/latin-300-italic.css';
+import '@fontsource/fraunces/latin-400-italic.css';
+import '@fontsource/fraunces/latin-600-italic.css';
 import '@fontsource/dm-sans/latin-400.css';
 import '@fontsource/dm-sans/latin-500.css';
 import '@fontsource/dm-sans/latin-600.css';
@@ -33,6 +36,8 @@ function captureEnglish() {
   ENGLISH['form.subject'] = 'Becoming a Mahleha partner';
   ENGLISH['tour.km'] = '{n} km from Tunis-Carthage airport';
   ENGLISH['form.sending'] = 'Sending…';
+  ENGLISH['descent.departures'] = 'Departures';
+  ENGLISH['descent.departing'] = 'Departing';
   ENGLISH['form.ok'] = 'Thank you. Your request has reached the Mahleha team, and a copy is on its way to {email}.';
   ENGLISH['form.okNoCopy'] = 'Thank you. Your request has reached the Mahleha team. We will reply to {email}.';
   ENGLISH['form.rate'] = 'Too many requests from this connection. Please try again in a few minutes.';
@@ -54,6 +59,7 @@ if (!reduced) {
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
+  if (import.meta.env.DEV) window.__lenis = lenis; // dev-only hook for testing scroll positions
 }
 $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
   const id = a.getAttribute('href');
@@ -75,6 +81,7 @@ async function startFlight() {
     const mod = await import('./flight.js');
     ROUTE_KM = mod.ROUTE_KM;
     $('#km-total').textContent = Math.round(ROUTE_KM).toLocaleString('en-US');
+    $('#pass-km').textContent = Math.round(ROUTE_KM).toLocaleString('en-US');
     flight = mod.createFlight($('#flight'), $('#labels'), { reduced });
     applyMapLabels();
   } catch (err) {
@@ -99,7 +106,7 @@ const KEYS = {
   }])),
   feel: { t: 1, overview: 1, focusLon: 10.5, focusLat: 36.6, ovHeight: 3.6, ovTilt: 1.0, clouds: 0, labels: L({ tunis: 1 }) },
   gains: { t: 1, overview: 1, focusLon: 16.8, focusLat: 36.2, ovHeight: 9.5, ovTilt: 0.6, clouds: 0, labels: L({ athens: 1, tunis: 1 }) },
-  pilot: { t: 1, overview: 1, focusLon: 11.2, focusLat: 34.8, ovHeight: 2.4, ovTilt: 1.0, clouds: 0, labels: L({ kerkennah: 1 }) },
+  pilot: { t: 1, overview: 1, focusLon: 14.5, focusLat: 36.4, ovHeight: 7.5, ovTilt: 0.6, clouds: 0, labels: L() },
   board: { t: 1, overview: 1, focusLon: 16.8, focusLat: 36.6, ovHeight: 8.5, ovTilt: 0.45, clouds: 0, labels: L({ athens: 1, tunis: 1 }) },
 };
 
@@ -161,6 +168,18 @@ gsap.ticker.add(() => {
   if (km !== lastKm) { kmEl.textContent = km.toLocaleString('en-US'); hud.style.setProperty('--p', `${t * 100}%`); lastKm = km; }
 });
 ScrollTrigger.create({ trigger: '.name', start: 'top 85%', endTrigger: '#board', end: 'top 30%', toggleClass: { targets: hud, className: 'is-on' } });
+
+// ---------- logo: the plane crosses the bridge on load and again on hover ----------
+function flyLogo(a) {
+  const m = a.querySelector('.lm-fly');
+  if (!m || reduced || typeof m.beginElement !== 'function') return;
+  try { m.beginElement(); } catch { /* SMIL unavailable */ }
+}
+$$('.brand').forEach((a) => {
+  if (!a.closest('.foot')) setTimeout(() => flyLogo(a), 900);
+  a.addEventListener('mouseenter', () => flyLogo(a));
+});
+ScrollTrigger.create({ trigger: '.foot', start: 'top 70%', once: true, onEnter: () => flyLogo($('.foot .brand')) });
 
 // ---------- nav ----------
 ScrollTrigger.create({ start: 40, end: 'max', toggleClass: { targets: '.nav', className: 'is-solid' } });
@@ -225,13 +244,34 @@ if (!reduced) {
   });
 }
 
-// ---------- descent: the colour block opens, then we land ----------
+// ---------- descent: through the clouds, the board flips to TUN, the destination is revealed ----------
+function flapIn(el) {
+  const target = el.dataset.flap; const chars = 'ABCDEFGHIJKLMNOPRSTUVWXYZ-';
+  el.innerHTML = [...target].map((c) => `<i data-c="${c}">${c === '-' ? '-' : ' '}</i>`).join('');
+  [...el.children].forEach((cell, k) => {
+    const want = cell.dataset.c; let n = 0; const stop = 6 + k * 2;
+    if (reduced) { cell.textContent = want; return; }
+    const id = setInterval(() => {
+      n += 1; cell.classList.toggle('tick', n % 2 === 0);
+      cell.textContent = n >= stop ? want : chars[Math.floor(Math.random() * chars.length)];
+      if (n >= stop) { clearInterval(id); cell.classList.add('set'); }
+    }, 55);
+  });
+}
+$$('.flap').forEach((f) => { f.innerHTML = [...f.dataset.flap].map((c) => `<i>${c}</i>`).join(''); });
+ScrollTrigger.create({ trigger: '.descent', start: 'top 60%', onEnter: () => $$('.flap').forEach(flapIn), onEnterBack: () => $$('.flap').forEach(flapIn) });
 if (!reduced) {
-  gsap.timeline({ scrollTrigger: { trigger: '.descent', start: 'top bottom', end: 'bottom top', scrub: true } })
-    .to('.descent-bg', { clipPath: 'circle(80% at 50% 50%)', ease: 'power2.inOut', duration: 0.35 }, 0.05)
-    .from('.descent-line span', { yPercent: 40, opacity: 0, stagger: 0.12, ease: 'power3.out', duration: 0.25 }, 0.25)
-    .to('.descent-line', { opacity: 0, y: -60, duration: 0.2 }, 0.72)
-    .to('.descent-bg', { opacity: 0, duration: 0.2 }, 0.75);
+  gsap.timeline({ scrollTrigger: { trigger: '.descent', start: 'top top', end: 'bottom bottom', scrub: 1 } })
+    .fromTo('.cl-1, .cl-3, .cl-5', { xPercent: 0, yPercent: 0, scale: 1 }, { xPercent: -70, yPercent: -40, scale: 1.6, ease: 'power1.in', duration: 1 }, 0)
+    .fromTo('.cl-2, .cl-4, .cl-6', { xPercent: 0, yPercent: 0, scale: 1 }, { xPercent: 70, yPercent: -40, scale: 1.6, ease: 'power1.in', duration: 1 }, 0)
+    .to('.clouds', { opacity: 0, duration: 0.25 }, 0.75)
+    .from('.arrivals', { y: -24, opacity: 0, duration: 0.12 }, 0.02)
+    .fromTo('.dl-a', { opacity: 0, filter: 'blur(16px)', letterSpacing: '0.12em', y: 20 }, { opacity: 1, filter: 'blur(0px)', letterSpacing: '0em', y: 0, duration: 0.22, ease: 'power2.out' }, 0.08)
+    .fromTo('.dl-b', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.14, ease: 'power2.out' }, 0.32)
+    .fromTo('.dl-c', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.26, ease: 'power2.inOut' }, 0.4)
+    .fromTo('.dl-photo', { backgroundPosition: '0% 50%' }, { backgroundPosition: '100% 50%', duration: 0.6, ease: 'none' }, 0.4)
+    .fromTo('.horizon', { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, 0.45)
+    .to(['.descent-line', '.arrivals'], { y: -90, opacity: 0, duration: 0.18, ease: 'power2.in' }, 0.84);
 }
 
 // ---------- reveals ----------
@@ -244,8 +284,19 @@ if (!reduced) {
     if (b) gsap.fromTo(b, { yPercent: 30 }, { yPercent: -10, ease: 'none', scrollTrigger: { trigger: s, start: 'top bottom', end: 'bottom top', scrub: true } });
   });
   gsap.from('.rules li', { y: 20, opacity: 0, stagger: 0.08, duration: 0.8, ease: 'expo.out', scrollTrigger: { trigger: '.rules', start: 'top 85%' } });
-  gsap.from('.steps li', { y: 40, opacity: 0, stagger: 0.12, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.steps', start: 'top 80%' } });
-  gsap.from('.pass', { y: 80, rotate: -2, opacity: 0, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: '.pass', start: 'top 85%' } });
+  // pilot: the bridge draws itself, then the nodes arrive
+  gsap.timeline({ scrollTrigger: { trigger: '.flow', start: 'top 75%' } })
+    .from('.fl-base', { strokeDashoffset: 1200, duration: 1.6, ease: 'power2.inOut', stagger: 0.25 })
+    .from('.fn', { scale: 0.4, opacity: 0, duration: 0.9, ease: 'back.out(1.8)', stagger: 0.18 }, 0.3)
+    .from('.fl-label', { y: 12, opacity: 0, duration: 0.7, ease: 'expo.out', stagger: 0.15 }, 1.1)
+    .from('.fl-dots, .fl-run', { opacity: 0, duration: 0.8 }, 1.2);
+  const boardTl = gsap.timeline({ scrollTrigger: { trigger: '.board', start: 'top 70%' } });
+  boardTl.from('.board-left > *:not(.pass)', { y: 30, opacity: 0, stagger: 0.08, duration: 0.9, ease: 'expo.out' })
+    .from('.pass', { y: 70, rotate: -3, opacity: 0, duration: 1.3, ease: 'expo.out' }, 0.15)
+    .from('.pass-row strong', { yPercent: 60, opacity: 0, stagger: 0.15, duration: 0.9, ease: 'expo.out' }, 0.45)
+    .from('.pr-line i', { scaleX: 0, duration: 1.6, ease: 'power2.inOut' }, 0.6)
+    .from('.enquiry', { y: 60, opacity: 0, duration: 1.2, ease: 'expo.out' }, 0.25)
+    .from('.enquiry .field, .enquiry .form-foot', { y: 18, opacity: 0, stagger: 0.06, duration: 0.7, ease: 'expo.out' }, 0.55);
   gsap.fromTo('.pass-plane', { xPercent: -40 }, { xPercent: 40, ease: 'none', scrollTrigger: { trigger: '.pass', start: 'top bottom', end: 'bottom top', scrub: true } });
 }
 
@@ -253,10 +304,50 @@ if (!reduced) {
 const tourStops = $$('.tour-stop');
 const tourLinks = $$('.tour-index a');
 let tourOn = 0;
+
+// each place card holds a small gallery: cross-fade with a slow zoom, thumbnails, swipe
+const SLIDE_MS = 4200;
+const galleries = tourStops.map((stop) => {
+  const fig = $('.tour-photo', stop);
+  const slides = $$('.tp-slide', fig);
+  const dots = $$('.tp-thumbs button', fig);
+  const count = $('.tp-count b', fig);
+  const timer = $('.tp-timer', fig);
+  let i = 0;
+  const go = (n) => {
+    i = (n + slides.length) % slides.length;
+    slides.forEach((sl, k) => sl.classList.toggle('is-on', k === i));
+    dots.forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
+    if (count) count.textContent = String(i + 1);
+    if (timer) { timer.classList.remove('run'); void timer.offsetWidth; timer.classList.add('run'); }
+  };
+  dots.forEach((d, k) => d.addEventListener('click', () => { go(k); runGallery(); }));
+  let x0 = null;
+  fig.addEventListener('pointerdown', (e) => { x0 = e.clientX; }, { passive: true });
+  fig.addEventListener('pointerup', (e) => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) { go(i + (dx < 0 ? 1 : -1)); runGallery(); }
+  }, { passive: true });
+  return { go, fig, get i() { return i; } };
+});
+let galleryTimer = null;
+function runGallery() {
+  clearInterval(galleryTimer);
+  if (reduced) return;
+  galleryTimer = setInterval(() => {
+    if (!document.documentElement.classList.contains('in-tour') || document.hidden) return;
+    const g = galleries[tourOn];
+    if (g && !g.fig.matches(':hover')) g.go(g.i + 1);
+  }, SLIDE_MS);
+}
+galleries[0]?.go(0);
+runGallery();
 function showStop(i) {
   if (i === tourOn) return;
   tourOn = i;
   tourStops.forEach((s, k) => { s.classList.toggle('is-on', k === i); s.inert = k !== i; });
+  galleries[i]?.go(0); runGallery();
   tourLinks.forEach((a, k) => { if (k === i) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
 }
 tourLinks[0]?.setAttribute('aria-current', 'true');
@@ -303,8 +394,7 @@ function armCue() {
   cue.classList.remove('is-on');
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
-    const doc = document.documentElement;
-    const nearEnd = scrollY > doc.scrollHeight - innerHeight * 1.8; // boarding pass and footer: nothing left to discover
+    const nearEnd = $('#board').getBoundingClientRect().top < innerHeight * 0.85; // contact and footer: nothing left to discover
     const busy = !menu.hidden || document.activeElement?.closest?.('form');
     if (!nearEnd && !busy && !document.hidden) cue.classList.add('is-on');
   }, 3000);
@@ -316,6 +406,50 @@ cue.addEventListener('click', () => {
   if (lenis) lenis.scrollTo(to, { duration: 1.4 }); else scrollTo({ top: to });
 });
 armCue();
+
+// ---------- leaving Tunisia: scrolling back up turns the arrivals board into a farewell ----------
+let leaving = false;
+function setLeaving(on) {
+  if (on === leaving) return;
+  leaving = on;
+  document.documentElement.classList.toggle('leaving', on);
+  const [code, city] = $$('.flap');
+  code.dataset.flap = on ? 'ATH' : 'TUN';
+  city.dataset.flap = on ? 'ATHENS' : 'TUNIS-CARTHAGE';
+  $('.ar-word').textContent = t(on ? 'descent.departures' : 'descent.arrivals');
+  $('.ar-state').textContent = t(on ? 'descent.departing' : 'descent.landing');
+  $('.ar-tag .ph').className = on ? 'ph ph-airplane-takeoff' : 'ph ph-airplane-landing';
+  if ($('.descent').getBoundingClientRect().bottom > 0 && $('.descent').getBoundingClientRect().top < innerHeight) $$('.flap').forEach(flapIn);
+}
+ScrollTrigger.create({
+  start: 0, end: 'max',
+  onUpdate: (self) => {
+    const tourTop = $('#tour').getBoundingClientRect().top;
+    // on the way back: anywhere above the start of the tour, scrolling up, after having reached Tunisia
+    if (self.direction < 0 && tourTop > -innerHeight * 0.2 && self.scroll() > innerHeight * 0.6) setLeaving(true);
+    else if (self.direction > 0 || self.scroll() <= innerHeight * 0.6) setLeaving(false);
+    const descent = $('.descent').getBoundingClientRect();
+    const inDescent = descent.top < innerHeight * 0.5 && descent.bottom > innerHeight * 0.5;
+    document.documentElement.classList.toggle('bye-on', leaving && !inDescent && tourTop > innerHeight);
+  },
+});
+
+// ---------- pilot steps light up one after another along the rail ----------
+const psteps = $$('.psteps li');
+ScrollTrigger.create({
+  trigger: '.psteps', start: 'top 80%', end: 'bottom 45%', scrub: true,
+  onUpdate: (self) => {
+    const n = Math.min(psteps.length, Math.floor(self.progress * (psteps.length + 0.6)));
+    psteps.forEach((li, k) => li.classList.toggle('is-on', k < Math.max(1, n)));
+    $('.ps-rail i').style.transform = `scaleX(${Math.min(1, self.progress * 1.1).toFixed(3)})`;
+  },
+});
+
+// ---------- gains: spotlight that follows the cursor ----------
+$$('.panel li').forEach((li) => li.addEventListener('pointermove', (e) => {
+  const r = li.getBoundingClientRect();
+  li.style.setProperty('--mx', `${e.clientX - r.left}px`); li.style.setProperty('--my', `${e.clientY - r.top}px`);
+}));
 
 // ---------- feel: four feelings, cycling while in view ----------
 const fws = $$('.fw'); const fqs = $$('.fq');
@@ -337,8 +471,21 @@ const select = (tab) => {
     p.hidden = !on; p.classList.toggle('is-on', on);
   });
 };
+let tabAuto = !reduced; let tabTimer = null;
+const tabList = $('.tabs');
+function runTabs() {
+  clearInterval(tabTimer); tabList.classList.remove('run'); void tabList.offsetWidth;
+  if (!tabAuto) return;
+  tabList.classList.add('run');
+  tabTimer = setInterval(() => {
+    const cur = tabs.findIndex((x) => x.getAttribute('aria-selected') === 'true');
+    select(tabs[(cur + 1) % tabs.length]);
+    tabList.classList.remove('run'); void tabList.offsetWidth; tabList.classList.add('run');
+  }, 6000);
+}
+ScrollTrigger.create({ trigger: '.gains', start: 'top 60%', end: 'bottom 30%', onToggle: (self) => { if (self.isActive) runTabs(); else { clearInterval(tabTimer); tabList.classList.remove('run'); } } });
 tabs.forEach((t, i) => {
-  t.addEventListener('click', () => select(t));
+  t.addEventListener('click', () => { tabAuto = false; runTabs(); select(t); });
   t.addEventListener('keydown', (e) => {
     const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (!d) return; e.preventDefault();
@@ -354,7 +501,7 @@ function renderCredits() {
   const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   $('#credit-count').textContent = `(${Object.keys(credits).length})`;
   $('#credits').innerHTML = Object.entries(credits).map(([k, v]) =>
-    `<li><a href="${esc(v.page)}" target="_blank" rel="noopener">${esc(names[k] || k)}</a> ${CREDIT_NAMES.by[lang]} ${esc(v.artist)}, ${esc(v.license)}</li>`).join('');
+    `<li><a href="${esc(v.page)}" target="_blank" rel="noopener">${esc(names[k] || v['name_' + lang] || k)}</a> ${CREDIT_NAMES.by[lang]} ${esc(v.artist)}, ${esc(v.license)}</li>`).join('');
 }
 fetch('img/credits.json').then((r) => r.json()).then((c) => { credits = c; renderCredits(); }).catch(() => {});
 
@@ -390,21 +537,24 @@ form.addEventListener('submit', async (e) => {
 
   // 1. send through the site's own mail function (Vercel /api/contact)
   const btn = $('[type=submit]', form); const btnLabel = $('span', btn);
-  btn.disabled = true; btnLabel.textContent = t('form.sending');
+  btn.disabled = true; btnLabel.textContent = t('form.sending'); btn.classList.add('is-sending');
   let res = null; let data = {};
   try {
     res = await fetch('api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...v, lang }) });
     data = await res.json().catch(() => ({}));
   } catch { /* offline, or a host with no mail function: fall back below */ }
-  btn.disabled = false; btnLabel.textContent = t('form.send');
+  btn.disabled = false; btnLabel.textContent = t('form.send'); btn.classList.remove('is-sending');
   if (res?.ok && data.ok) {
     $('#form-sent-text').textContent = t(data.confirm ? 'form.ok' : 'form.okNoCopy').replace('{email}', v.email.trim());
+    $('#form-sent').classList.remove('is-warn');
     $('#form-sent').hidden = false;
+    btn.classList.add('is-flown'); setTimeout(() => btn.classList.remove('is-flown'), 1600);
     form.reset();
     return;
   }
   if (res?.status === 429) {
     $('#form-sent-text').textContent = t('form.rate');
+    $('#form-sent').classList.add('is-warn');
     $('#form-sent').hidden = false;
     return;
   }

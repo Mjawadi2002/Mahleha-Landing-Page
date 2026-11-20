@@ -313,6 +313,8 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const ovPos = new THREE.Vector3(); const ovLook = new THREE.Vector3();
   const camPos = new THREE.Vector3(); const camLook = new THREE.Vector3();
   let first = true;
+  // heading: 0 = flying to Tunis, PI = turned around, flying back to Athens
+  let lastT = 0; let dir = 1; let yaw = 0;
   const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
   if (!reduced) window.addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth - 0.5; pointer.y = e.clientY / innerHeight - 0.5; }, { passive: true });
 
@@ -341,12 +343,20 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     plane.position.copy(tmp);
     plane.position.y += Math.sin(time * 1.3) * 0.01;
     plane.lookAt(tmp.clone().add(tan));
-    plane.rotateY(Math.PI); // model nose points -z
-    plane.rotateZ(Math.sin(time * 0.7) * 0.05 - (t > 0.02 && t < 0.98 ? 0.1 : 0));
+    // which way is the scroll taking us? keep the last heading while the plane holds still
+    const dt = t - lastT; lastT = t;
+    if (dt < -0.0004) dir = -1; else if (dt > 0.0004) dir = 1;
+    const targetYaw = dir < 0 ? Math.PI : 0;
+    yaw += (targetYaw - yaw) * (reduced ? 1 : 0.08);
+    const turning = Math.sin(yaw); // 0 when straight, 1 mid-turn
+    plane.rotateY(Math.PI + yaw); // model nose points -z
+    plane.rotateZ(Math.sin(time * 0.7) * 0.05 - (t > 0.02 && t < 0.98 ? 0.1 : 0) * Math.cos(yaw) - turning * 0.45);
     trailGlow.position.copy(plane.position);
     trailGlow.material.opacity = t > 0.001 && t < 0.999 ? 0.5 : 0;
     routeGeo.setDrawRange(0, Math.floor(t * N) + 1);
     plane.visible = t < 0.999;
+    const hideRoute = 1 - state.tour;
+    routeMat.opacity = 0.95 * hideRoute; ghost.material.opacity = 0.18 * hideRoute; shadow.material.opacity = 0.25 * hideRoute;
 
     // chase camera: behind and above the plane
     const back = tan.clone().multiplyScalar(-state.camDist);
@@ -385,7 +395,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
       const pulse = reduced ? 0.5 : (time * 0.6 + m.phase) % 1;
       m.ring.scale.setScalar(0.4 + pulse * 1.2);
       m.ring.material.opacity = (1 - pulse) * 0.8 * Math.max(vis, 0.35);
-      const gate = m.tour ? state.tour : 1 - 0.85 * state.tour;
+      const gate = m.tour ? state.tour : 1 - state.tour;
       m.dot.material.opacity = (0.5 + vis * 0.5) * gate;
       m.ring.material.opacity *= gate;
       const sp = m.pos.clone(); sp.y = 0.05; sp.project(camera);
