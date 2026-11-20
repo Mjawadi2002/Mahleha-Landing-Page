@@ -236,7 +236,6 @@ if (!reduced) {
   gsap.from('.rules li', { y: 20, opacity: 0, stagger: 0.08, duration: 0.8, ease: 'expo.out', scrollTrigger: { trigger: '.rules', start: 'top 85%' } });
   gsap.from('.steps li', { y: 40, opacity: 0, stagger: 0.12, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.steps', start: 'top 80%' } });
   gsap.from('.pass', { y: 80, rotate: -2, opacity: 0, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: '.pass', start: 'top 85%' } });
-  gsap.fromTo('.pilot-photo img', { yPercent: -18 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: '.pilot-photo', start: 'top bottom', end: 'bottom top', scrub: true } });
   gsap.fromTo('.pass-plane', { xPercent: -40 }, { xPercent: 40, ease: 'none', scrollTrigger: { trigger: '.pass', start: 'top bottom', end: 'bottom top', scrub: true } });
 }
 
