@@ -1,26 +1,27 @@
 /* Mahleha: palette and type taken from the brand positioning deck.
    One theme on purpose: the whole page is a night flight over the deck's navy,
    with a single terracotta colour-block at the descent. */
-/* Two moods. Outbound (default): a Tunisian night, pomegranate and sea-glass mint on ink (no orange, no yellow).
+/* Two moods (no orange, no yellow anywhere). Outbound, Greece to Tunisia (default): the Aegean, deep blue and ice blue.
+   Homebound (html.leaving): Tunisia's colours, pomegranate and sea-glass mint on ink, carried home.
    --gold is the historical name of the highlight token; it holds mint (Tunisia) or ice blue (Greece).
    On the way back (html.leaving): the Aegean, deep blue and marble white.
    Colours are registered so the whole page can glide from one mood to the other. */
-@property --bg-deep { syntax: '<color>'; inherits: true; initial-value: #08131f; }
-@property --bg { syntax: '<color>'; inherits: true; initial-value: #0b1a2a; }
-@property --bg-2 { syntax: '<color>'; inherits: true; initial-value: #11243a; }
-@property --bg-3 { syntax: '<color>'; inherits: true; initial-value: #183150; }
-@property --cream { syntax: '<color>'; inherits: true; initial-value: #f5f1ea; }
-@property --gold { syntax: '<color>'; inherits: true; initial-value: #6fd8bf; }
-@property --accent { syntax: '<color>'; inherits: true; initial-value: #c93460; }
-@property --accent-hi { syntax: '<color>'; inherits: true; initial-value: #d94a73; }
-@property --accent-soft { syntax: '<color>'; inherits: true; initial-value: #f28fab; }
-@property --sea { syntax: '<color>'; inherits: true; initial-value: #2f86c9; }
-@property --sea-soft { syntax: '<color>'; inherits: true; initial-value: #8cc3e8; }
+@property --bg-deep { syntax: '<color>'; inherits: true; initial-value: #061629; }
+@property --bg { syntax: '<color>'; inherits: true; initial-value: #0a2343; }
+@property --bg-2 { syntax: '<color>'; inherits: true; initial-value: #102f58; }
+@property --bg-3 { syntax: '<color>'; inherits: true; initial-value: #17406f; }
+@property --cream { syntax: '<color>'; inherits: true; initial-value: #f3f7fc; }
+@property --gold { syntax: '<color>'; inherits: true; initial-value: #9fd3ff; }
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #2371d4; }
+@property --accent-hi { syntax: '<color>'; inherits: true; initial-value: #3a85e6; }
+@property --accent-soft { syntax: '<color>'; inherits: true; initial-value: #9cc8ff; }
+@property --sea { syntax: '<color>'; inherits: true; initial-value: #4aa6e8; }
+@property --sea-soft { syntax: '<color>'; inherits: true; initial-value: #bfe1fa; }
 :root {
-  --bg-deep: #08131f; --bg: #0b1a2a; --bg-2: #11243a; --bg-3: #183150;
-  --cream: #f5f1ea; --gold: #6fd8bf;
-  --accent: #c93460; --accent-hi: #d94a73; --accent-soft: #f28fab; --on-accent: #fff6f8;
-  --sea: #2f86c9; --sea-soft: #8cc3e8;
+  --bg-deep: #061629; --bg: #0a2343; --bg-2: #102f58; --bg-3: #17406f;
+  --cream: #f3f7fc; --gold: #9fd3ff;
+  --accent: #2371d4; --accent-hi: #3a85e6; --accent-soft: #9cc8ff; --on-accent: #fff6f8;
+  --sea: #4aa6e8; --sea-soft: #bfe1fa;
   /* fixed identity colours: the two shores never change */
   --aegean: #5fa8e6; --tn: #d23a5f;
   /* aliases kept for older rules */
@@ -39,10 +40,10 @@
     --accent 1.4s ease, --accent-hi 1.4s ease, --accent-soft 1.4s ease, --sea 1.4s ease, --sea-soft 1.4s ease;
 }
 html.leaving {
-  --bg-deep: #061629; --bg: #0a2343; --bg-2: #102f58; --bg-3: #17406f;
-  --cream: #f3f7fc; --gold: #9fd3ff;
-  --accent: #2371d4; --accent-hi: #3a85e6; --accent-soft: #9cc8ff;
-  --sea: #4aa6e8; --sea-soft: #bfe1fa;
+  --bg-deep: #08131f; --bg: #0b1a2a; --bg-2: #11243a; --bg-3: #183150;
+  --cream: #f5f1ea; --gold: #6fd8bf;
+  --accent: #c93460; --accent-hi: #d94a73; --accent-soft: #f28fab; --on-accent: #fff6f8;
+  --sea: #2f86c9; --sea-soft: #8cc3e8;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -910,3 +911,40 @@ h1, h2, h3 { text-wrap: balance; }
 .tour-ghost > span { font-size: clamp(56px, 6.6vw, 124px); }
 .tour-index { position: relative; z-index: 1; }
 @media (max-height: 760px) { .tour-ghost { display: none; } }
+
+/* ---------- the way home: "Mahleha Tunisia" ---------- */
+.ar-tn, .name-tn, .name-def-back { display: none; }
+.leaving .ar-tn { display: inline; animation: tn-in .9s var(--ease) both; }
+.leaving .name-tn { display: block; }
+.leaving .name-tn span { display: inline-block; font-family: 'Fraunces', 'Literata', Georgia, serif; font-style: italic; font-weight: 600; font-size: clamp(44px, 9vw, 150px); line-height: .9; letter-spacing: -0.03em; color: var(--gold); margin-top: -0.12em; animation: tn-in 1.1s var(--ease) both; }
+.leaving .name-def-out { display: none; }
+.leaving .name-def-back { display: block; animation: tn-in 1s var(--ease) .15s both; }
+.name-def-back em { font-family: var(--serif); font-style: italic; color: var(--cream); }
+@keyframes tn-in { from { opacity: 0; transform: translateY(24px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* ---------- the way home: souvenir showcase ---------- */
+.souv { position: absolute; left: 50%; bottom: calc(5vh + env(safe-area-inset-bottom, 0px)); z-index: 2; width: min(560px, calc(100% - 2 * var(--gutter))); transform: translate(-50%, 30px); opacity: 0; pointer-events: none;
+  padding: 18px 22px 16px; border-radius: 20px; background: color-mix(in srgb, var(--bg-deep) 78%, transparent); backdrop-filter: blur(14px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 30%, transparent), 0 30px 60px -30px rgba(0, 0, 0, .8); transition: opacity .6s var(--ease), transform .8s var(--ease); text-align: left; }
+.souv-on .souv { opacity: 1; transform: translate(-50%, 0); }
+.souv-kicker { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.souv-kicker .ph { font-size: 16px; }
+.souv-n { margin-left: auto; color: var(--cream-dim); font-weight: 600; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.souv-items { display: grid; margin-top: 10px; }
+.souv-item { grid-area: 1 / 1; opacity: 0; transform: translateY(12px); transition: opacity .45s var(--ease), transform .6s var(--ease); }
+.souv-item.is-on { opacity: 1; transform: none; }
+.souv-item h3 { font-family: 'Fraunces', 'Literata', Georgia, serif; font-style: italic; font-weight: 600; font-size: clamp(26px, 3vw, 36px); line-height: 1.05; color: var(--cream); }
+.souv-item p { color: var(--cream-dim); font-size: 15px; margin-top: 6px; }
+.souv-dots { display: flex; gap: 5px; margin-top: 14px; }
+.souv-dots i { flex: 1; height: 3px; border-radius: 3px; background: var(--cream-faint); transition: background .4s; }
+.souv-dots i.is-on { background: var(--gold); }
+:lang(el) .souv-kicker { text-transform: none; letter-spacing: .03em; font-size: 13px; }
+/* while the showcase runs, the farewell moves up to make room for the plane */
+.souv-on .descent .farewell { top: 15%; transform: none; gap: 4px; }
+.souv-on .fw-title { font-size: clamp(28px, 3.6vw, 52px); animation: none; }
+.souv-on .fw-ar { font-size: clamp(22px, 2.4vw, 32px); }
+.souv-on .fw-sub { display: none; }
+.souv-on .arrivals { opacity: 0; transition: opacity .5s; }
+.souv-on .descent-inner::before { opacity: 0; transition: opacity .6s; }
+.souv-on .clouds { opacity: 0 !important; }
+@media (max-width: 600px) { .souv { padding: 14px 16px 12px; } .souv-item p { font-size: 13.5px; } .souv-on .descent .farewell { top: 11%; } }

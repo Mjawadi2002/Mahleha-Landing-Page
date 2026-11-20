@@ -7,6 +7,7 @@ import { feature } from 'topojson-client';
 import land50 from 'world-atlas/land-50m.json';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { buildAirliner } from './plane.js';
+import { buildSouvenirs } from './souvenirs.js';
 import { TOUR, haversineKm } from './places.js';
 export { haversineKm };
 
@@ -83,7 +84,7 @@ function buildLandCanvas(pxPerDeg) {
   return { canvas: c, ctx: g, rings, polys: polysOut, W, H };
 }
 
-// Two map moods: Tunisian night (outbound) and the Aegean (on the way back).
+// Two map moods: the Aegean on the way out to Tunisia, Tunisia's own colours on the way home.
 export const MAP_THEMES = {
   tn: { seaIn: '#142a40', seaOut: '#0b1a2a', land: '#1c2b46', coast: 'rgba(226,234,246,0.44)', glow: 'rgba(111,216,191,0.30)',
     bg: 0x0b1a2a, route: 0x6fd8bf, accent: 0xc93460, dots: 0xf5f1ea, tunis: 0xd23a5f, athens: 0x6fd8bf,
@@ -240,8 +241,8 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const seaMat = new THREE.ShaderMaterial({
     fog: true,
     uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
-      uDeep: { value: new THREE.Color(MAP_THEMES.tn.deep) }, uShallow: { value: new THREE.Color(MAP_THEMES.tn.shallow) },
-      uSky: { value: new THREE.Color(MAP_THEMES.tn.sky) }, uSun: { value: SUN_DIR.clone() }, uTime: { value: 0 }, uShore: { value: null },
+      uDeep: { value: new THREE.Color(MAP_THEMES.gr.deep) }, uShallow: { value: new THREE.Color(MAP_THEMES.gr.shallow) },
+      uSky: { value: new THREE.Color(MAP_THEMES.gr.sky) }, uSun: { value: SUN_DIR.clone() }, uTime: { value: 0 }, uShore: { value: null },
     }]),
     vertexShader: `varying vec2 vUv; varying vec3 vWorld;
       #include <fog_pars_vertex>
@@ -279,8 +280,8 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   // the land: real coastline polygons, raised, lit by the sun, with a glowing shoreline
   const coastTex = new THREE.CanvasTexture(coastMap(rings, W, H));
   coastTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const landTop = new THREE.MeshStandardMaterial({ color: MAP_THEMES.tn.landTop, roughness: 0.95, metalness: 0, emissive: MAP_THEMES.tn.coastLight, emissiveMap: coastTex, emissiveIntensity: 0.6, envMapIntensity: 0.06 });
-  const landSide = new THREE.MeshStandardMaterial({ color: MAP_THEMES.tn.landSide, roughness: 1, metalness: 0, envMapIntensity: 0.04 });
+  const landTop = new THREE.MeshStandardMaterial({ color: MAP_THEMES.gr.landTop, roughness: 0.95, metalness: 0, emissive: MAP_THEMES.gr.coastLight, emissiveMap: coastTex, emissiveIntensity: 0.6, envMapIntensity: 0.06 });
+  const landSide = new THREE.MeshStandardMaterial({ color: MAP_THEMES.gr.landSide, roughness: 1, metalness: 0, envMapIntensity: 0.04 });
   const land = new THREE.Mesh(raisedLand(polys, pxPerDeg, LAND_H), [landTop, landSide]);
   land.receiveShadow = shadows;
   scene.add(land);
@@ -353,6 +354,15 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     return { posArr, geo, mat, filled: false };
   });
   const engW = new THREE.Vector3();
+
+  // souvenirs from Tunisia, circling the plane on the way home
+  const souv = new THREE.Group(); souv.visible = false; scene.add(souv);
+  const items = buildSouvenirs();
+  items.forEach((it) => { it.traverse((o) => { if (o.isMesh) o.castShadow = shadows; }); souv.add(it); });
+  const featureGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,0.8)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
+  featureGlow.scale.setScalar(0.34); souv.add(featureGlow);
+  let showK = 0; let ringBase = 0;
+  const orbitPos = new THREE.Vector3();
   const trailGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,0.9)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   trailGlow.scale.setScalar(0.5); scene.add(trailGlow);
 
@@ -430,14 +440,17 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     labels: Object.fromEntries(Object.keys(ALL).map((k) => [k, 0])),
     tour: 0, // 0..1 visibility of the tour path and its markers
     hop: 0, // position along the tour: 2.5 = halfway from stop 3 to stop 4
-    theme: 0, // 0 = Tunisian night, 1 = Aegean (set by the page when the visitor heads back)
+    showcase: 0, // 0..1, the souvenir showcase around the plane (way home only)
+    item: 0, // which souvenir is featured
+    theme: 0, // 0 = Aegean (outbound), 1 = Tunisian colours (set by the page when the visitor heads home)
   };
   const TH = { tn: {}, gr: {} };
-  for (const k of ['bg', 'route', 'accent', 'dots', 'athens', 'deep', 'shallow', 'sky', 'landTop', 'landSide', 'coastLight']) { TH.tn[k] = new THREE.Color(MAP_THEMES.tn[k]); TH.gr[k] = new THREE.Color(MAP_THEMES.gr[k]); }
+  for (const k of ['bg', 'route', 'accent', 'dots', 'athens', 'deep', 'shallow', 'sky', 'landTop', 'landSide', 'coastLight']) { TH.tn[k] = new THREE.Color(MAP_THEMES.gr[k]); TH.gr[k] = new THREE.Color(MAP_THEMES.tn[k]); }
+  // TH.tn = the start of the trip (Aegean), TH.gr = the way home (Tunisian colours)
   const mixC = new THREE.Color();
   let themeK = 0; let themeInit = false;
-  trailGlow.material.color.set(MAP_THEMES.tn.route);
-  tourHead.material.color.set(MAP_THEMES.tn.route);
+  trailGlow.material.color.set(MAP_THEMES.gr.route);
+  tourHead.material.color.set(MAP_THEMES.gr.route);
 
   const tmp = new THREE.Vector3(); const tan = new THREE.Vector3();
   const chasePos = new THREE.Vector3(); const chaseLook = new THREE.Vector3();
@@ -485,7 +498,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     trailGlow.position.copy(plane.position);
     trailGlow.material.opacity = t > 0.001 && t < 0.999 ? 0.5 : 0;
     routeGeo.setDrawRange(0, Math.floor(t * N) + 1);
-    plane.visible = t < 0.999;
+    plane.visible = t < 0.999 || showK > 0.05;
     const hideRoute = 1 - state.tour;
     routeMat.opacity = 0.95 * hideRoute; ghost.material.opacity = 0.18 * hideRoute; shadow.material.opacity = 0.25 * hideRoute;
 
@@ -503,6 +516,14 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     const k = state.overview;
     const targetPos = chasePos.clone().lerp(ovPos, k);
     const targetLook = chaseLook.clone().lerp(ovLook, k);
+    showK += ((state.showcase || 0) - showK) * (reduced ? 1 : 0.05);
+    if (showK > 0.001) {
+      const oa = (reduced ? 0.6 : time * 0.05) + 0.6;
+      const near = innerWidth < 700 ? 1.9 : 1.45;
+      orbitPos.set(plane.position.x + Math.sin(oa) * near, plane.position.y + 0.5, plane.position.z + Math.cos(oa) * near);
+      targetPos.lerp(orbitPos, showK);
+      targetLook.lerp(plane.position, showK);
+    }
     pointer.sx += (pointer.x - pointer.sx) * 0.04; pointer.sy += (pointer.y - pointer.sy) * 0.04;
     targetPos.x += pointer.sx * 0.35; targetPos.y += -pointer.sy * 0.2;
     if (first) { camPos.copy(targetPos); camLook.copy(targetLook); first = false; }
@@ -584,6 +605,28 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
       tr.geo.attributes.position.needsUpdate = true;
       tr.mat.uniforms.uOpacity.value += (((flying ? 0.5 : 0) * (1 - state.overview)) - tr.mat.uniforms.uOpacity.value) * 0.1;
     });
+    // souvenir carousel
+    souv.visible = showK > 0.01;
+    if (souv.visible) {
+      souv.position.copy(plane.position);
+      const n = items.length; const step = (Math.PI * 2) / n;
+      const toCam = Math.atan2(camera.position.z - plane.position.z, camera.position.x - plane.position.x);
+      let want = toCam + 0.55 - (state.item || 0) * step; // featured item just beside the plane, not in front of it
+      let d = ((want - ringBase + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+      ringBase += d * (reduced ? 1 : 0.06);
+      const R = 0.72;
+      items.forEach((it, i) => {
+        const a = ringBase + i * step; const feat = i === (state.item || 0);
+        const target = feat ? 1.12 : 0.78;
+        it.userData.s = (it.userData.s ?? 1) + (target - (it.userData.s ?? 1)) * 0.08;
+        it.position.set(Math.cos(a) * R * (feat ? 0.9 : 1), (feat ? 0.06 : 0.0) + Math.sin(time * 1.2 + i) * 0.025, Math.sin(a) * R * (feat ? 0.9 : 1));
+        it.scale.setScalar(it.userData.s * showK);
+        if (!reduced) it.userData.item.rotation.y += feat ? 0.012 : 0.006;
+        if (feat) featureGlow.position.copy(it.position);
+      });
+      featureGlow.material.opacity = 0.35 * showK;
+    }
+
     // keep the sun's shadow box on the plane
     if (shadows) { sun.position.copy(plane.position).addScaledVector(SUN_DIR, 6); sun.target.position.copy(plane.position); sun.target.updateMatrixWorld(); }
     seaMat.uniforms.uTime.value = reduced ? 0 : time;

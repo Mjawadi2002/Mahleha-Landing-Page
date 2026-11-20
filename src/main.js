@@ -415,7 +415,8 @@ function setLeaving(on) {
   leaving = on;
   document.documentElement.classList.toggle('leaving', on);
   if (flight) flight.state.theme = on ? 1 : 0;
-  $('meta[name=theme-color]')?.setAttribute('content', on ? '#0a2343' : '#0b1a2a');
+  if (!on) { document.documentElement.classList.remove('souv-on'); if (flight) flight.state.showcase = 0; }
+  $('meta[name=theme-color]')?.setAttribute('content', on ? '#0b1a2a' : '#0a2343');
   const [code, city] = $$('.flap');
   code.dataset.flap = on ? 'ATH' : 'TUN';
   city.dataset.flap = on ? 'ATHENS' : 'TUNIS-CARTHAGE';
@@ -433,9 +434,29 @@ ScrollTrigger.create({
     else if (self.direction > 0) setLeaving(false); // the Aegean mood stays until the visitor heads to Tunisia again
     const descent = $('.descent').getBoundingClientRect();
     const inDescent = descent.top < innerHeight * 0.5 && descent.bottom > innerHeight * 0.5;
+    updateShowcase();
     document.documentElement.classList.toggle('bye-on', leaving && !inDescent && tourTop > innerHeight && self.scroll() > innerHeight * 0.6);
   },
 });
+
+// ---------- the way home: a souvenir showcase around the plane while crossing the descent ----------
+const souvItems = $$('.souv-item'); const souvDots = $$('.souv-dots i'); let souvOn = -1;
+function updateShowcase() {
+  const d = $('.descent'); const r = d.getBoundingClientRect();
+  const p = Math.min(1, Math.max(0, -r.top / Math.max(1, d.offsetHeight - innerHeight)));
+  const n = souvItems.length;
+  const active = leaving && r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.5 && p > 0.02 && p < 0.84;
+  document.documentElement.classList.toggle('souv-on', active);
+  if (flight) flight.state.showcase = active ? 1 : 0;
+  if (!active) return;
+  const i = Math.min(n - 1, Math.max(0, Math.floor(((0.84 - p) / 0.8) * n)));
+  if (i === souvOn) return;
+  souvOn = i;
+  if (flight) flight.state.item = i;
+  souvItems.forEach((el, k) => el.classList.toggle('is-on', k === i));
+  souvDots.forEach((dot, k) => dot.classList.toggle('is-on', k <= i));
+  $('.souv-n').textContent = `${i + 1} / ${n}`;
+}
 
 // ---------- pilot steps light up one after another along the rail ----------
 const psteps = $$('.psteps li');
