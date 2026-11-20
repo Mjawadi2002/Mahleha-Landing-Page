@@ -12,11 +12,11 @@ const one = (v, n) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').trim().slice(0,
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function shell(title, inner) {
-  return `<!doctype html><html><body style="margin:0;background:#f3ebdc;font-family:Arial,Helvetica,sans-serif;color:#0d2231">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3ebdc;padding:28px 12px"><tr><td align="center">
+  return `<!doctype html><html><body style="margin:0;background:#f6eee2;font-family:Arial,Helvetica,sans-serif;color:#0b1a2a">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6eee2;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#0d2231;padding:22px 28px;color:#f3ebdc;font-family:Georgia,serif;font-size:22px;font-weight:bold">Mahleha
-<div style="font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:#e6a83a;margin-top:4px">Discover Tunisia. Feel the Local Life.</div></td></tr>
+<tr><td style="background:#0b1a2a;padding:22px 28px;color:#f6eee2;font-family:Georgia,serif;font-size:22px;font-weight:bold">Mahleha
+<div style="font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:#6fd8bf;margin-top:4px">Discover Tunisia. Feel the Local Life.</div></td></tr>
 <tr><td style="padding:28px">
 <h1 style="font-family:Georgia,serif;font-size:22px;line-height:1.3;margin:0 0 14px">${title}</h1>
 ${inner}

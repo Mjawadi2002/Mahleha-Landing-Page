@@ -75,24 +75,32 @@ function buildLandCanvas(pxPerDeg) {
   return { canvas: c, ctx: g, rings, W, H };
 }
 
-function landTexture(rings, W, H) {
+// Two map moods: Tunisian night (outbound) and the Aegean (on the way back).
+export const MAP_THEMES = {
+  tn: { seaIn: '#142a40', seaOut: '#0b1a2a', land: '#1c2b46', coast: 'rgba(226,234,246,0.44)', glow: 'rgba(111,216,191,0.30)',
+    bg: 0x0b1a2a, route: 0x6fd8bf, accent: 0xc93460, dots: 0xf5f1ea, tunis: 0xd23a5f, athens: 0x6fd8bf },
+  gr: { seaIn: '#16457a', seaOut: '#0a2343', land: '#1c4a7e', coast: 'rgba(225,240,255,0.55)', glow: 'rgba(159,211,255,0.32)',
+    bg: 0x0a2343, route: 0x9fd3ff, accent: 0x2371d4, dots: 0xf3f7fc, tunis: 0xd23a5f, athens: 0x9fd3ff },
+};
+
+function landTexture(rings, W, H, pal = MAP_THEMES.tn) {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
   // sea
   const sea = g.createRadialGradient(W * 0.55, H * 0.55, 0, W * 0.55, H * 0.55, W * 0.7);
-  sea.addColorStop(0, '#16384c');
-  sea.addColorStop(1, '#0d2231');
+  sea.addColorStop(0, pal.seaIn);
+  sea.addColorStop(1, pal.seaOut);
   g.fillStyle = sea; g.fillRect(0, 0, W, H);
   // land fill (evenodd keeps lakes as holes)
   g.beginPath();
   for (const r of rings) { g.moveTo(r[0][0], r[0][1]); for (const p of r) g.lineTo(p[0], p[1]); g.closePath(); }
-  g.fillStyle = '#1b3b4f';
+  g.fillStyle = pal.land;
   g.fill('evenodd');
   // coast glow + line
   g.save();
-  g.shadowColor = 'rgba(243,235,220,0.25)'; g.shadowBlur = W / 400;
-  g.strokeStyle = 'rgba(243,235,220,0.42)'; g.lineWidth = Math.max(1, W / 2600);
+  g.shadowColor = pal.glow; g.shadowBlur = W / 400;
+  g.strokeStyle = pal.coast; g.lineWidth = Math.max(1, W / 2600);
   g.stroke();
   g.restore();
   return c;
@@ -127,8 +135,10 @@ function landDots(rings, W, H, pxPerDeg) {
 // ---------- plane ----------
 function buildPlane() {
   const g = new THREE.Group();
-  const cream = new THREE.MeshStandardMaterial({ color: 0xf3ebdc, roughness: 0.45, metalness: 0.1 });
-  const terra = new THREE.MeshStandardMaterial({ color: 0xb94a26, roughness: 0.6 });
+  const cream = new THREE.MeshStandardMaterial({ color: 0xeef2f8, roughness: 0.45, metalness: 0.1 });
+  const terra = new THREE.MeshStandardMaterial({ color: 0xc93460, roughness: 0.6 });
+  terra.name = 'accent';
+  const accentMat = terra;
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.42, 6, 16), cream);
   body.rotation.x = Math.PI / 2;
   g.add(body);
@@ -148,6 +158,7 @@ function buildPlane() {
   fin.position.set(0, 0.05, 0.25); fin.rotation.x = -0.35;
   g.add(fin);
   g.scale.setScalar(0.85);
+  g.userData.accent = accentMat;
   return g;
 }
 
@@ -165,33 +176,40 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.setClearColor(0x0d2231, 1);
+  renderer.setClearColor(0x0b1a2a, 1);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0d2231, 9, 26);
+  scene.fog = new THREE.Fog(0x0b1a2a, 9, 26);
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 80);
 
-  scene.add(new THREE.HemisphereLight(0xf3ebdc, 0x0d2231, 1.4));
-  const sun = new THREE.DirectionalLight(0xffd9a0, 2.2);
+  scene.add(new THREE.HemisphereLight(0xf5f1ea, 0x0b1a2a, 1.4));
+  const sun = new THREE.DirectionalLight(0xe6eefc, 2.2);
   sun.position.set(-4, 6, 3); scene.add(sun);
 
   // Land plane
   const pxPerDeg = Math.min(110, renderer.capabilities.maxTextureSize / ((BBOX.e - BBOX.w) * KX));
   const { rings, W, H } = buildLandCanvas(pxPerDeg);
-  const tex = new THREE.CanvasTexture(landTexture(rings, W, H));
+  const tex = new THREE.CanvasTexture(landTexture(rings, W, H, MAP_THEMES.tn));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const texGr = new THREE.CanvasTexture(landTexture(rings, W, H, MAP_THEMES.gr));
+  texGr.colorSpace = THREE.SRGBColorSpace;
+  texGr.anisotropy = tex.anisotropy;
   const mapW = (BBOX.e - BBOX.w) * KX; const mapH = BBOX.n - BBOX.s;
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(mapW, mapH), new THREE.MeshBasicMaterial({ map: tex }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(lonToX((BBOX.w + BBOX.e) / 2), 0, latToZ((BBOX.s + BBOX.n) / 2));
   scene.add(ground);
+  // the Aegean version of the same map, faded in on the way back
+  const groundGr = new THREE.Mesh(ground.geometry, new THREE.MeshBasicMaterial({ map: texGr, transparent: true, opacity: 0, depthWrite: false }));
+  groundGr.rotation.x = -Math.PI / 2; groundGr.position.copy(ground.position); groundGr.position.y += 0.002;
+  scene.add(groundGr);
 
   // Halftone land dots
   const dotGeo = landDots(rings, W, H, pxPerDeg);
   const dotMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
-    uniforms: { uTime: { value: 0 }, uPx: { value: renderer.getPixelRatio() }, uColor: { value: new THREE.Color(0xf3ebdc) } },
+    uniforms: { uTime: { value: 0 }, uPx: { value: renderer.getPixelRatio() }, uColor: { value: new THREE.Color(0xf5f1ea) } },
     vertexShader: `attribute float seed; varying float vSeed; uniform float uPx;
       void main(){ vSeed = seed; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mv; gl_PointSize = uPx * 22.0 / -mv.z; }`,
     fragmentShader: `varying float vSeed; uniform float uTime; uniform vec3 uColor;
@@ -211,13 +229,13 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const N = 400;
   const routePts = curve.getSpacedPoints(N);
   const routeGeo = new THREE.BufferGeometry().setFromPoints(routePts);
-  const routeMat = new THREE.LineDashedMaterial({ color: 0xe6a83a, dashSize: 0.07, gapSize: 0.06, transparent: true, opacity: 0.95 });
+  const routeMat = new THREE.LineDashedMaterial({ color: 0x6fd8bf, dashSize: 0.07, gapSize: 0.06, transparent: true, opacity: 0.95 });
   const route = new THREE.Line(routeGeo, routeMat);
   route.computeLineDistances();
   routeGeo.setDrawRange(0, 0);
   scene.add(route);
   // faint ghost of the full route so the destination reads before we arrive
-  const ghost = new THREE.Line(routeGeo.clone(), new THREE.LineDashedMaterial({ color: 0xf3ebdc, dashSize: 0.03, gapSize: 0.09, transparent: true, opacity: 0.18 }));
+  const ghost = new THREE.Line(routeGeo.clone(), new THREE.LineDashedMaterial({ color: 0xeef2f8, dashSize: 0.03, gapSize: 0.09, transparent: true, opacity: 0.18 }));
   ghost.computeLineDistances(); scene.add(ghost);
 
   // Ground shadow of the route
@@ -229,7 +247,7 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   // Plane
   const plane = buildPlane();
   scene.add(plane);
-  const trailGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(230,168,58,0.9)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  const trailGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,0.9)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   trailGlow.scale.setScalar(0.5); scene.add(trailGlow);
 
   // Markers
@@ -239,16 +257,16 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     const t = new THREE.CanvasTexture(c); return t;
   })();
   const markers = {};
-  const COLORS = { athens: 0xe6a83a, tunis: 0xd0582f, kerkennah: 0xd0582f };
+  const COLORS = { athens: 0x6fd8bf, tunis: 0xd23a5f, kerkennah: 0xd23a5f };
   const ALL = { ...PLACES };
   for (const p of TOUR) ALL[p.key] = { ...p, label: p.key, sub: '', tour: true };
   for (const [key, p] of Object.entries(ALL)) {
     const pos = project(p.lon, p.lat);
     const grp = new THREE.Group(); grp.position.copy(pos);
     const r0 = p.tour ? 0.03 : 0.06;
-    const dot = new THREE.Mesh(new THREE.CircleGeometry(r0, 24), new THREE.MeshBasicMaterial({ color: COLORS[key] ?? 0xe6a83a, transparent: true }));
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(r0, 24), new THREE.MeshBasicMaterial({ color: COLORS[key] ?? 0x6fd8bf, transparent: true }));
     dot.rotation.x = -Math.PI / 2; dot.position.y = 0.02; grp.add(dot);
-    const ring = new THREE.Mesh(new THREE.PlaneGeometry(r0 * 8, r0 * 8), new THREE.MeshBasicMaterial({ map: ringTex, color: COLORS[key] ?? 0xe6a83a, transparent: true, depthWrite: false }));
+    const ring = new THREE.Mesh(new THREE.PlaneGeometry(r0 * 8, r0 * 8), new THREE.MeshBasicMaterial({ map: ringTex, color: COLORS[key] ?? 0x6fd8bf, transparent: true, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.021; grp.add(ring);
     scene.add(grp);
     const el = document.createElement('div');
@@ -273,18 +291,18 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     }
   });
   const tourGeo = new THREE.BufferGeometry().setFromPoints(tourPts);
-  const tourMat = new THREE.LineBasicMaterial({ color: 0xe6a83a, transparent: true, opacity: 0 });
+  const tourMat = new THREE.LineBasicMaterial({ color: 0x6fd8bf, transparent: true, opacity: 0 });
   const tourLine = new THREE.Line(tourGeo, tourMat);
   tourGeo.setDrawRange(0, 0); scene.add(tourLine);
-  const tourGhostMat = new THREE.LineDashedMaterial({ color: 0xf3ebdc, dashSize: 0.02, gapSize: 0.03, transparent: true, opacity: 0 });
+  const tourGhostMat = new THREE.LineDashedMaterial({ color: 0xeef2f8, dashSize: 0.02, gapSize: 0.03, transparent: true, opacity: 0 });
   const tourGhost = new THREE.Line(tourGeo.clone(), tourGhostMat);
   tourGhost.computeLineDistances(); scene.add(tourGhost);
-  const tourHead = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(230,168,58,1)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
+  const tourHead = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture('rgba(255,255,255,1)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
   tourHead.scale.setScalar(0.22); scene.add(tourHead);
   const headPos = new THREE.Vector3();
 
   // Clouds: soft sprites layered at cruising height
-  const cloudTex = glowTexture('rgba(243,235,220,0.55)');
+  const cloudTex = glowTexture('rgba(232,238,248,0.55)');
   const clouds = [];
   for (let i = 0; i < 60; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, opacity: 0 }));
@@ -306,7 +324,14 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     labels: Object.fromEntries(Object.keys(ALL).map((k) => [k, 0])),
     tour: 0, // 0..1 visibility of the tour path and its markers
     hop: 0, // position along the tour: 2.5 = halfway from stop 3 to stop 4
+    theme: 0, // 0 = Tunisian night, 1 = Aegean (set by the page when the visitor heads back)
   };
+  const TH = { tn: {}, gr: {} };
+  for (const k of ['bg', 'route', 'accent', 'dots', 'athens']) { TH.tn[k] = new THREE.Color(MAP_THEMES.tn[k]); TH.gr[k] = new THREE.Color(MAP_THEMES.gr[k]); }
+  const mixC = new THREE.Color();
+  let themeK = 0; let themeInit = false;
+  trailGlow.material.color.set(MAP_THEMES.tn.route);
+  tourHead.material.color.set(MAP_THEMES.tn.route);
 
   const tmp = new THREE.Vector3(); const tan = new THREE.Vector3();
   const chasePos = new THREE.Vector3(); const chaseLook = new THREE.Vector3();
@@ -415,6 +440,21 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
     tourHead.position.copy(headPos);
     tourHead.scale.setScalar(THREE.MathUtils.clamp(state.ovHeight * 0.05, 0.05, 0.3));
     tourHead.material.opacity = state.tour * (reduced ? 0.8 : 0.75 + Math.sin(time * 4) * 0.2);
+
+    // theme: glide every map colour between the two moods
+    themeK += (state.theme - themeK) * (reduced ? 1 : 0.035);
+    if (Math.abs(state.theme - themeK) > 0.0005 || !themeInit) {
+      themeInit = true;
+      const k = themeK;
+      mixC.lerpColors(TH.tn.bg, TH.gr.bg, k); renderer.setClearColor(mixC, 1); scene.fog.color.copy(mixC);
+      groundGr.material.opacity = k;
+      mixC.lerpColors(TH.tn.route, TH.gr.route, k);
+      routeMat.color.copy(mixC); tourMat.color.copy(mixC); trailGlow.material.color.copy(mixC); tourHead.material.color.copy(mixC);
+      mixC.lerpColors(TH.tn.athens, TH.gr.athens, k);
+      for (const [key, m] of Object.entries(markers)) if (key === 'athens' || m.tour) { m.dot.material.color.copy(mixC); m.ring.material.color.copy(mixC); }
+      plane.userData.accent?.color.lerpColors(TH.tn.accent, TH.gr.accent, k);
+      dotMat.uniforms.uColor.value.lerpColors(TH.tn.dots, TH.gr.dots, k);
+    }
 
     dotMat.uniforms.uTime.value = time;
     renderer.render(scene, camera);

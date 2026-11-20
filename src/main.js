@@ -348,6 +348,7 @@ function showStop(i) {
   tourOn = i;
   tourStops.forEach((s, k) => { s.classList.toggle('is-on', k === i); s.inert = k !== i; });
   galleries[i]?.go(0); runGallery();
+  $$('.tour-ghost > span').forEach((g, k) => g.classList.toggle('is-on', k === i));
   tourLinks.forEach((a, k) => { if (k === i) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
 }
 tourLinks[0]?.setAttribute('aria-current', 'true');
@@ -413,6 +414,8 @@ function setLeaving(on) {
   if (on === leaving) return;
   leaving = on;
   document.documentElement.classList.toggle('leaving', on);
+  if (flight) flight.state.theme = on ? 1 : 0;
+  $('meta[name=theme-color]')?.setAttribute('content', on ? '#0a2343' : '#0b1a2a');
   const [code, city] = $$('.flap');
   code.dataset.flap = on ? 'ATH' : 'TUN';
   city.dataset.flap = on ? 'ATHENS' : 'TUNIS-CARTHAGE';
@@ -427,10 +430,10 @@ ScrollTrigger.create({
     const tourTop = $('#tour').getBoundingClientRect().top;
     // on the way back: anywhere above the start of the tour, scrolling up, after having reached Tunisia
     if (self.direction < 0 && tourTop > -innerHeight * 0.2 && self.scroll() > innerHeight * 0.6) setLeaving(true);
-    else if (self.direction > 0 || self.scroll() <= innerHeight * 0.6) setLeaving(false);
+    else if (self.direction > 0) setLeaving(false); // the Aegean mood stays until the visitor heads to Tunisia again
     const descent = $('.descent').getBoundingClientRect();
     const inDescent = descent.top < innerHeight * 0.5 && descent.bottom > innerHeight * 0.5;
-    document.documentElement.classList.toggle('bye-on', leaving && !inDescent && tourTop > innerHeight);
+    document.documentElement.classList.toggle('bye-on', leaving && !inDescent && tourTop > innerHeight && self.scroll() > innerHeight * 0.6);
   },
 });
 
