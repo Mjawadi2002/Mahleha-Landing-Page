@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mahleha · Discover Tunisia. Feel the Local Life.</title>
+  <meta name="description" content="Mahleha connects Greek travel agencies with the people, places and traditions of Tunisia. Story-led experiences, sold through the agencies Greek travellers already trust." />
+  <meta name="theme-color" content="#0d2231" />
+  <meta property="og:title" content="Mahleha · The bridge between Greece and Tunisia" />
+  <meta property="og:description" content="Discover Tunisia. Feel the Local Life. Story-led Tunisian experiences for Greek travel agencies." />
+  <meta property="og:image" content="img/sidi-bou-said.webp" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate" hreflang="el" href="#el" />
+  <link rel="preload" as="image" href="img/athens.webp" />
+</head>
+<body>
+  <!-- Copy: English lives in the markup; Greek lives in src/i18n.js under the same data-i18n keys. -->
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <canvas id="flight" aria-hidden="true"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="#top" class="brand" aria-label="Mahleha">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="20" r="6" fill="#d0582f"/><circle cx="21" cy="12" r="6" fill="#e6a83a" opacity=".9"/><path d="M11 20 Q 13 8 21 12" fill="none" stroke="#f3ebdc" stroke-width="1.4" stroke-dasharray="1.6 2.2"/></svg>
+      <span>Mahleha</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#bridge" data-i18n="nav.how">How it works</a>
+      <a href="#tour" data-i18n="nav.places">Places</a>
+      <a href="#pilot" data-i18n="nav.pilot">Pilot</a>
+    </nav>
+    <div class="nav-end">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" id="lang-en" data-lang="en" aria-pressed="true" lang="en">EN</button>
+        <button type="button" id="lang-el" data-lang="el" aria-pressed="false" lang="el">ΕΛ</button>
+      </div>
+      <a class="btn btn-sm" href="#board" data-i18n="cta.partner">Become a partner</a>
+      <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu" data-i18n-aria="nav.menu" aria-label="Menu"><i class="ph ph-list"></i></button>
+    </div>
+  </header>
+  <div class="menu" id="menu" hidden>
+    <nav data-i18n-aria="nav.sections" aria-label="Sections">
+      <a href="#bridge"><b>01</b><span data-i18n="nav.how">How it works</span></a>
+      <a href="#tour"><b>02</b><span data-i18n="nav.places">Places</span></a>
+      <a href="#pilot"><b>03</b><span data-i18n="nav.pilot">Pilot</span></a>
+    </nav>
+    <a class="btn" href="#board"><span data-i18n="cta.partner">Become a partner</span> <i class="ph ph-arrow-right"></i></a>
+  </div>
+
+  <aside class="hud" aria-hidden="true">
+    <div class="hud-codes"><b>ATH</b><span class="hud-line"><i></i><em class="ph ph-airplane-in-flight"></em></span><b>TUN</b></div>
+    <div class="hud-km"><span id="km">0</span> / <span id="km-total">0</span> <span data-i18n="hud.km">km</span></div>
+  </aside>
+
+  <main id="main">
+    <!-- 1. Departure -->
+    <section class="chapter hero" id="top" data-chapter="departure">
+      <div class="window" id="window">
+        <img src="img/athens.webp" data-i18n-alt="alt.athens" alt="The Acropolis of Athens lit up just after sunset, seen over the city" width="2000" height="1125" fetchpriority="high" />
+      </div>
+      <div class="hero-copy">
+        <h1 class="display reveal-lines" data-i18n="hero.title">Tunisia, one story closer to Greece.</h1>
+        <p class="lede" data-i18n="hero.lede">Mahleha connects Greek travel agencies with the people, places and traditions of Tunisia.</p>
+        <div class="ctas">
+          <a class="btn" href="#board"><span data-i18n="cta.partner">Become a partner</span> <i class="ph ph-arrow-right"></i></a>
+          <a class="btn btn-ghost" href="#tour" data-i18n="cta.stories">See the places</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. The name, climbing out of Athens -->
+    <section class="chapter name" data-chapter="name">
+      <div class="name-inner">
+        <p class="arabic" lang="ar" dir="rtl">محلاها</p>
+        <h2 class="display-xl split-chars">Mahleha</h2>
+        <p class="name-def" data-i18n-html="name.def">Tunisian Arabic for <em>“how beautiful it is”</em>. It is what people say when a place, a dish or a moment stops them.</p>
+      </div>
+    </section>
+
+    <!-- 3. How the bridge works: four stops along one line -->
+    <section class="chapter bridge" id="bridge" data-chapter="bridge">
+      <div class="bridge-pin">
+        <div class="bridge-head">
+          <h2 class="h2" data-i18n="bridge.title">How the bridge works</h2>
+          <p class="body" data-i18n="bridge.body">One partner for Greek agencies. One trusted door to Greece for Tunisian communities.</p>
+        </div>
+        <ol class="stops">
+          <li class="stop">
+            <i class="ph ph-users-three"></i>
+            <span class="tag" data-i18n="bridge.s1.tag">Tunisia</span>
+            <h3 data-i18n="bridge.s1.title">Tunisian local partners</h3>
+            <p data-i18n="bridge.s1.body">Hosts, makers, guides and ground operators who live the stories.</p>
+          </li>
+          <li class="stop stop-core">
+            <i class="ph ph-arrows-left-right"></i>
+            <span class="tag" data-i18n="bridge.s2.tag">The bridge</span>
+            <h3>Mahleha</h3>
+            <p data-i18n="bridge.s2.body">Curates, validates and packages story-led experiences, and supports them on the ground.</p>
+          </li>
+          <li class="stop">
+            <i class="ph ph-buildings"></i>
+            <span class="tag" data-i18n="bridge.s3.tag">Greece, B2B</span>
+            <h3 data-i18n="bridge.s3.title">Greek travel agencies</h3>
+            <p data-i18n="bridge.s3.body">Sell Mahleha experiences to their clients and advise them with confidence.</p>
+          </li>
+          <li class="stop">
+            <i class="ph ph-heart"></i>
+            <span class="tag" data-i18n="bridge.s4.tag">Greece, B2C</span>
+            <h3 data-i18n="bridge.s4.title">Greek travellers</h3>
+            <p data-i18n="bridge.s4.body">Book through an agency they trust and live Tunisia through its people.</p>
+          </li>
+        </ol>
+        <div class="stops-rail" aria-hidden="true"><span></span></div>
+      </div>
+    </section>
+
+    <!-- 4. Seeing vs discovering: each line turns into its Mahleha version -->
+    <section class="chapter shift" data-chapter="shift">
+      <div class="shift-inner">
+        <h2 class="h2" data-i18n="shift.title">From seeing Tunisia to discovering its stories</h2>
+        <ul class="morph" data-i18n-aria="shift.aria" aria-label="Conventional sightseeing compared with the Mahleha approach">
+          <li><i class="ph ph-book-open"></i><span class="from" data-i18n="shift.f1">Visit a destination</span><span class="to" data-i18n="shift.t1">Discover the story of a place</span></li>
+          <li><i class="ph ph-bank"></i><span class="from" data-i18n="shift.f2">Look at a monument</span><span class="to" data-i18n="shift.t2">Understand its heritage</span></li>
+          <li><i class="ph ph-fork-knife"></i><span class="from" data-i18n="shift.f3">Taste a local dish</span><span class="to" data-i18n="shift.t3">Explore the culture behind the food</span></li>
+          <li><i class="ph ph-users"></i><span class="from" data-i18n="shift.f4">Buy a souvenir</span><span class="to" data-i18n="shift.t4">Meet local makers</span></li>
+          <li><i class="ph ph-heart"></i><span class="from" data-i18n="shift.f5">Take photographs</span><span class="to" data-i18n="shift.t5">Create meaningful memories</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 5. Descent: the one colour-block moment -->
+    <section class="chapter descent" data-chapter="descent">
+      <div class="descent-bg" aria-hidden="true"></div>
+      <div class="descent-inner">
+        <h2 class="display-xl descent-line"><span data-i18n="descent.a">Start with the story.</span><span data-i18n="descent.b">Then reveal the destination.</span></h2>
+      </div>
+    </section>
+
+    <!-- 6. The tour: the map hops between twelve places -->
+    <section class="chapter tour" id="tour" data-chapter="tour" aria-labelledby="tour-title">
+      <div class="tour-head">
+        <h2 class="h2" id="tour-title" data-i18n="tour.title">Twelve places travellers fall for</h2>
+        <p class="body" data-i18n="tour.body">From Roman Carthage to the Sahara. Keep scrolling and the map hops from one to the next.</p>
+      </div>
+      <div class="tour-track">
+        <div class="tour-stage">
+          <nav class="tour-index" data-i18n-aria="tour.indexAria" aria-label="All twelve places">
+            <ol>
+            <li><a href="#tour-carthage" data-go="carthage"><b>01</b><span data-i18n="tour.carthage.title">Carthage</span></a></li>
+            <li><a href="#tour-sidi" data-go="sidi"><b>02</b><span data-i18n="tour.sidi.title">Sidi Bou Said</span></a></li>
+            <li><a href="#tour-marsa" data-go="marsa"><b>03</b><span data-i18n="tour.marsa.title">La Marsa</span></a></li>
+            <li><a href="#tour-bizerte" data-go="bizerte"><b>04</b><span data-i18n="tour.bizerte.title">Bizerte</span></a></li>
+            <li><a href="#tour-aindraham" data-go="aindraham"><b>05</b><span data-i18n="tour.aindraham.title">Aïn Draham</span></a></li>
+            <li><a href="#tour-dougga" data-go="dougga"><b>06</b><span data-i18n="tour.dougga.title">Dougga</span></a></li>
+            <li><a href="#tour-kairouan" data-go="kairouan"><b>07</b><span data-i18n="tour.kairouan.title">Kairouan</span></a></li>
+            <li><a href="#tour-hammamet" data-go="hammamet"><b>08</b><span data-i18n="tour.hammamet.title">Hammamet</span></a></li>
+            <li><a href="#tour-eljem" data-go="eljem"><b>09</b><span data-i18n="tour.eljem.title">El Jem</span></a></li>
+            <li><a href="#tour-matmata" data-go="matmata"><b>10</b><span data-i18n="tour.matmata.title">Matmata</span></a></li>
+            <li><a href="#tour-douz" data-go="douz"><b>11</b><span data-i18n="tour.douz.title">Douz</span></a></li>
+            <li><a href="#tour-tozeur" data-go="tozeur"><b>12</b><span data-i18n="tour.tozeur.title">Tozeur</span></a></li>
+            </ol>
+          </nav>
+          <div class="tour-cards">
+          <article class="tour-stop is-on" data-stop="carthage">
+            <figure class="tour-photo"><img src="img/carthage.webp" data-i18n-alt="tour.carthage.alt" alt="Columns of the Antonine Baths in Carthage with the Gulf of Tunis behind" loading="lazy" width="1500" height="1112" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">01<em>/12</em></span><span data-i18n="tour.carthage.region">Gulf of Tunis</span></p>
+              <h3 data-i18n="tour.carthage.title">Carthage</h3>
+              <p class="tour-hook" data-i18n="tour.carthage.hook">The city of Dido, then of Rome.</p>
+              <p class="tour-body" data-i18n="tour.carthage.body">Founded by Phoenicians, destroyed by Rome in 146 BC and rebuilt as a Roman capital. The Antonine Baths stand right on the sea.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="carthage"></span><a href="https://whc.unesco.org/en/list/37/" target="_blank" rel="noopener"><i class="ph ph-seal-check"></i> <span data-i18n="tour.whc1979">UNESCO World Heritage, 1979</span></a></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="sidi" inert>
+            <figure class="tour-photo"><img src="img/sidi-bou-said.webp" data-i18n-alt="tour.sidi.alt" alt="A white and blue street in Sidi Bou Said" loading="lazy" width="2000" height="1339" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">02<em>/12</em></span><span data-i18n="tour.sidi.region">Gulf of Tunis</span></p>
+              <h3 data-i18n="tour.sidi.title">Sidi Bou Said</h3>
+              <p class="tour-hook" data-i18n="tour.sidi.hook">Blue doors, white walls, open sea.</p>
+              <p class="tour-body" data-i18n="tour.sidi.body">A clifftop village above the Gulf of Tunis, named after the Sufi saint Abu Said al-Baji. Mint tea with a view of the bay.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="sidi"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="marsa" inert>
+            <figure class="tour-photo"><img src="img/marsa.webp" data-i18n-alt="tour.marsa.alt" alt="The beach and white town of La Marsa along a deep blue bay" loading="lazy" width="1500" height="1125" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">03<em>/12</em></span><span data-i18n="tour.marsa.region">Gulf of Tunis</span></p>
+              <h3 data-i18n="tour.marsa.title">La Marsa</h3>
+              <p class="tour-hook" data-i18n="tour.marsa.hook">Where Tunis goes to the sea.</p>
+              <p class="tour-body" data-i18n="tour.marsa.body">A seaside town just north of Carthage, with a long beach and a corniche made for evening walks.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="marsa"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="bizerte" inert>
+            <figure class="tour-photo"><img src="img/bizerte.webp" data-i18n-alt="tour.bizerte.alt" alt="Fishing boats in the old port of Bizerte, with white houses along the quay" loading="lazy" width="1500" height="844" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">04<em>/12</em></span><span data-i18n="tour.bizerte.region">The far north</span></p>
+              <h3 data-i18n="tour.bizerte.title">Bizerte</h3>
+              <p class="tour-hook" data-i18n="tour.bizerte.hook">An old port at the top of Africa.</p>
+              <p class="tour-body" data-i18n="tour.bizerte.body">Colourful houses around the old harbour and kasbah, and wide beaches close to the northernmost tip of Africa.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="bizerte"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="aindraham" inert>
+            <figure class="tour-photo"><img src="img/aindraham.webp" data-i18n-alt="tour.aindraham.alt" alt="Stone steps through a snowy forest at Aïn Draham" loading="lazy" width="1200" height="900" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">05<em>/12</em></span><span data-i18n="tour.aindraham.region">Kroumirie mountains</span></p>
+              <h3 data-i18n="tour.aindraham.title">Aïn Draham</h3>
+              <p class="tour-hook" data-i18n="tour.aindraham.hook">Snow in Tunisia? Yes.</p>
+              <p class="tour-body" data-i18n="tour.aindraham.body">A mountain town in cork oak forests near the Algerian border, and one of the few places in Tunisia where snow falls in winter.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="aindraham"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="dougga" inert>
+            <figure class="tour-photo"><img src="img/dougga.webp" data-i18n-alt="tour.dougga.alt" alt="The Capitol of Dougga, a Roman temple with columns, under a blue sky" loading="lazy" width="1500" height="996" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">06<em>/12</em></span><span data-i18n="tour.dougga.region">The northwest</span></p>
+              <h3 data-i18n="tour.dougga.title">Dougga</h3>
+              <p class="tour-hook" data-i18n="tour.dougga.hook">A whole Roman town on a hill.</p>
+              <p class="tour-body" data-i18n="tour.dougga.body">Temples, a theatre and the Capitol, in what UNESCO calls the best-preserved Roman small town in North Africa.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="dougga"></span><a href="https://whc.unesco.org/en/list/794/" target="_blank" rel="noopener"><i class="ph ph-seal-check"></i> <span data-i18n="tour.whc1997">UNESCO World Heritage, 1997</span></a></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="kairouan" inert>
+            <figure class="tour-photo"><img src="img/kairouan.webp" data-i18n-alt="tour.kairouan.alt" alt="The square minaret of the Great Mosque of Kairouan" loading="lazy" width="1500" height="1000" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">07<em>/12</em></span><span data-i18n="tour.kairouan.region">Central Tunisia</span></p>
+              <h3 data-i18n="tour.kairouan.title">Kairouan</h3>
+              <p class="tour-hook" data-i18n="tour.kairouan.hook">The first Islamic city of the Maghreb.</p>
+              <p class="tour-body" data-i18n="tour.kairouan.body">Founded in 670. Its Great Mosque is one of the oldest in North Africa, and its medina is known for carpets and makroudh pastries.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="kairouan"></span><a href="https://whc.unesco.org/en/list/499/" target="_blank" rel="noopener"><i class="ph ph-seal-check"></i> <span data-i18n="tour.whc1988">UNESCO World Heritage, 1988</span></a></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="hammamet" inert>
+            <figure class="tour-photo"><img src="img/hammamet.webp" data-i18n-alt="tour.hammamet.alt" alt="The stone walls of the Hammamet medina rising behind a sandy beach" loading="lazy" width="1500" height="1125" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">08<em>/12</em></span><span data-i18n="tour.hammamet.region">Cap Bon coast</span></p>
+              <h3 data-i18n="tour.hammamet.title">Hammamet</h3>
+              <p class="tour-hook" data-i18n="tour.hammamet.hook">A walled medina on the beach.</p>
+              <p class="tour-body" data-i18n="tour.hammamet.body">Long sandy beaches, jasmine in summer, and an old medina whose walls stand right at the edge of the sand.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="hammamet"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="eljem" inert>
+            <figure class="tour-photo"><img src="img/eljem.webp" data-i18n-alt="tour.eljem.alt" alt="Aerial view of the Roman amphitheatre of El Jem in the middle of the town" loading="lazy" width="1400" height="933" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">09<em>/12</em></span><span data-i18n="tour.eljem.region">The Sahel</span></p>
+              <h3 data-i18n="tour.eljem.title">El Jem</h3>
+              <p class="tour-hook" data-i18n="tour.eljem.hook">A colosseum among the olive groves.</p>
+              <p class="tour-body" data-i18n="tour.eljem.body">Built in the 3rd century for around 35,000 spectators, it is one of the largest amphitheatres of the Roman world.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="eljem"></span><a href="https://whc.unesco.org/en/list/38/" target="_blank" rel="noopener"><i class="ph ph-seal-check"></i> <span data-i18n="tour.whc1979">UNESCO World Heritage, 1979</span></a></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="matmata" inert>
+            <figure class="tour-photo"><img src="img/matmata.webp" data-i18n-alt="tour.matmata.alt" alt="The sunken courtyard of Hotel Sidi Driss in Matmata, used as a Star Wars set" loading="lazy" width="1400" height="1120" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">10<em>/12</em></span><span data-i18n="tour.matmata.region">The south</span></p>
+              <h3 data-i18n="tour.matmata.title">Matmata</h3>
+              <p class="tour-hook" data-i18n="tour.matmata.hook">Luke Skywalker grew up here.</p>
+              <p class="tour-body" data-i18n="tour.matmata.body">Berber homes dug into the ground around open courtyards. One of them, Hotel Sidi Driss, was the Lars homestead in Star Wars (1977).</p>
+              <p class="tour-foot"><span class="tour-km" data-km="matmata"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="douz" inert>
+            <figure class="tour-photo"><img src="img/douz.webp" data-i18n-alt="tour.douz.alt" alt="Rolling sand dunes of the Sahara near Douz" loading="lazy" width="1500" height="925" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">11<em>/12</em></span><span data-i18n="tour.douz.region">Gateway to the Sahara</span></p>
+              <h3 data-i18n="tour.douz.title">Douz</h3>
+              <p class="tour-hook" data-i18n="tour.douz.hook">Where the Sahara begins.</p>
+              <p class="tour-body" data-i18n="tour.douz.body">Camel rides into the dunes of the Grand Erg Oriental, and every winter the International Festival of the Sahara.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="douz"></span></p>
+            </div>
+          </article>
+          <article class="tour-stop" data-stop="tozeur" inert>
+            <figure class="tour-photo"><img src="img/tozeur.webp" data-i18n-alt="tour.tozeur.alt" alt="A wooden boat with a Tunisian flag stranded on the salt flat of Chott el Jerid" loading="lazy" width="1500" height="938" /></figure>
+            <div class="tour-copy">
+              <p class="tour-meta"><span class="tour-n">12<em>/12</em></span><span data-i18n="tour.tozeur.region">Oases of the Djerid</span></p>
+              <h3 data-i18n="tour.tozeur.title">Tozeur</h3>
+              <p class="tour-hook" data-i18n="tour.tozeur.hook">A salt lake that holds the sky.</p>
+              <p class="tour-body" data-i18n="tour.tozeur.body">Palm-grove oases, an old town of patterned brick, and Chott el Jerid, a vast salt flat known for its mirages.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="tozeur"></span></p>
+            </div>
+          </article>
+            <div class="tour-progress" aria-hidden="true"><span></span></div>
+          </div>
+        </div>
+        <div class="tour-marks" aria-hidden="true">
+        <div class="tour-mark" data-place="carthage" id="tour-carthage"></div>
+        <div class="tour-mark" data-place="sidi" id="tour-sidi"></div>
+        <div class="tour-mark" data-place="marsa" id="tour-marsa"></div>
+        <div class="tour-mark" data-place="bizerte" id="tour-bizerte"></div>
+        <div class="tour-mark" data-place="aindraham" id="tour-aindraham"></div>
+        <div class="tour-mark" data-place="dougga" id="tour-dougga"></div>
+        <div class="tour-mark" data-place="kairouan" id="tour-kairouan"></div>
+        <div class="tour-mark" data-place="hammamet" id="tour-hammamet"></div>
+        <div class="tour-mark" data-place="eljem" id="tour-eljem"></div>
+        <div class="tour-mark" data-place="matmata" id="tour-matmata"></div>
+        <div class="tour-mark" data-place="douz" id="tour-douz"></div>
+        <div class="tour-mark" data-place="tozeur" id="tour-tozeur"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. What travellers should feel -->
+    <section class="chapter feel" data-chapter="feel">
+      <figure class="feel-photo"><img src="img/sidi-bou-said.webp" data-i18n-alt="alt.sidi" alt="A white and blue street in Sidi Bou Said, northern Tunisia" loading="lazy" width="2000" height="1339" /></figure>
+      <div class="feel-inner">
+        <h2 class="h2" data-i18n="feel.title">What should travellers feel?</h2>
+        <div class="feel-track">
+          <div class="feel-words" role="list">
+            <button role="listitem" class="fw is-on" data-i="0"><i class="ph ph-magnifying-glass"></i><span data-i18n="feel.w1">Curiosity</span></button>
+            <button role="listitem" class="fw" data-i="1"><i class="ph ph-chat-circle"></i><span data-i18n="feel.w2">Connection</span></button>
+            <button role="listitem" class="fw" data-i="2"><i class="ph ph-compass"></i><span data-i18n="feel.w3">Discovery</span></button>
+            <button role="listitem" class="fw" data-i="3"><i class="ph ph-book-open"></i><span data-i18n="feel.w4">Meaningful memory</span></button>
+          </div>
+          <div class="feel-quotes" aria-live="polite">
+            <blockquote class="fq is-on" data-i18n="feel.q1">“I want to know what is behind this place.”</blockquote>
+            <blockquote class="fq" data-i18n="feel.q2">“I met people and heard their stories.”</blockquote>
+            <blockquote class="fq" data-i18n="feel.q3">“I learned something I did not know before.”</blockquote>
+            <blockquote class="fq" data-i18n="feel.q4">“I am taking home a story, not just a photo.”</blockquote>
+          </div>
+        </div>
+        <p class="promise"><i class="ph ph-heart"></i><span data-i18n="feel.promise">Every experience reveals a story worth remembering.</span></p>
+      </div>
+    </section>
+
+    <!-- 8. Every side gains -->
+    <section class="chapter gains" data-chapter="gains">
+      <div class="gains-inner">
+        <h2 class="h2" data-i18n="gains.title">Every side of the bridge gains</h2>
+        <div class="tabs" role="tablist" data-i18n-aria="gains.aria" aria-label="Who gains">
+          <button role="tab" id="t-ag" aria-controls="p-ag" aria-selected="true"><i class="ph ph-buildings"></i><span data-i18n="gains.t1">Greek travel agencies</span></button>
+          <button role="tab" id="t-tn" aria-controls="p-tn" aria-selected="false" tabindex="-1"><i class="ph ph-users-three"></i><span data-i18n="gains.t2">Tunisian partners</span></button>
+          <button role="tab" id="t-tr" aria-controls="p-tr" aria-selected="false" tabindex="-1"><i class="ph ph-heart"></i><span data-i18n="gains.t3">Greek travellers</span></button>
+        </div>
+        <div class="panels">
+          <div role="tabpanel" id="p-ag" aria-labelledby="t-ag" class="panel is-on">
+            <ul>
+              <li><span>01</span><b data-i18n="gains.ag1">A distinctive Tunisian product their competitors don't have</b></li>
+              <li><span>02</span><b data-i18n="gains.ag2">Validated local partners and clear itineraries</b></li>
+              <li><span>03</span><b data-i18n="gains.ag3">One trusted contact for everything in Tunisia</b></li>
+            </ul>
+          </div>
+          <div role="tabpanel" id="p-tn" aria-labelledby="t-tn" class="panel" hidden>
+            <ul>
+              <li><span>01</span><b data-i18n="gains.tn1">Access to Greek travellers through trusted agencies</b></li>
+              <li><span>02</span><b data-i18n="gains.tn2">Their knowledge credited and fairly represented</b></li>
+              <li><span>03</span><b data-i18n="gains.tn3">Respectful, steady demand for living traditions</b></li>
+            </ul>
+          </div>
+          <div role="tabpanel" id="p-tr" aria-labelledby="t-tr" class="panel" hidden>
+            <ul>
+              <li><span>01</span><b data-i18n="gains.tr1">Easy booking through an agency they already trust</b></li>
+              <li><span>02</span><b data-i18n="gains.tr2">Authentic encounters, not staged performances</b></li>
+              <li><span>03</span><b data-i18n="gains.tr3">A story to take home, not just a photo</b></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. The pilot -->
+    <section class="chapter pilot" id="pilot" data-chapter="pilot">
+      <div class="pilot-inner">
+        <h2 class="h2" data-i18n="pilot.title">One carefully validated pilot</h2>
+        <p class="body" data-i18n="pilot.body">We start with one Greek travel agency and one operational Tunisian partner.</p>
+        <ol class="steps">
+          <li><b>1</b><h3 data-i18n="pilot.s1.t">Validate a Tunisian partner</h3><p data-i18n="pilot.s1.b">Select one operational partner and check quality, safety and community consent.</p></li>
+          <li><b>2</b><h3 data-i18n="pilot.s2.t">Co-design one story</h3><p data-i18n="pilot.s2.b">Build one story-led experience with local voices at its centre.</p></li>
+          <li><b>3</b><h3 data-i18n="pilot.s3.t">Sign one Greek agency</h3><p data-i18n="pilot.s3.b">Present the experience to Greek agencies and secure one launch partner.</p></li>
+          <li><b>4</b><h3 data-i18n="pilot.s4.t">Run, learn, refine</h3><p data-i18n="pilot.s4.b">Welcome the first travellers, gather feedback from all sides, improve before scaling.</p></li>
+        </ol>
+        <div class="rules">
+        <p class="rules-title" data-i18n="rules.title">How we tell every story</p>
+        <ul>
+          <li><i class="ph ph-shield-check"></i><span data-i18n="rules.r1">Be authentic</span></li>
+          <li><i class="ph ph-medal"></i><span data-i18n="rules.r2">Credit local knowledge</span></li>
+          <li><i class="ph ph-hand-palm"></i><span data-i18n="rules.r3">Ask permission</span></li>
+          <li><i class="ph ph-share-network"></i><span data-i18n="rules.r4">Share the story back</span></li>
+        </ul>
+      </div>
+        <figure class="pilot-photo">
+          <img src="img/charfia.webp" data-i18n-alt="alt.charfia" alt="Charfia fixed fisheries of palm fronds stretching across the calm sea off the Kerkennah islands" loading="lazy" width="2000" height="1334" />
+          <figcaption data-i18n="pilot.caption">Charfia fishing in the Kerkennah islands, part of Tunisia's intangible heritage recognised by UNESCO.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 10. Boarding: the agency call to action -->
+    <section class="chapter board" id="board" data-chapter="board">
+      <div class="board-inner">
+        <h2 class="h2" data-i18n="board.title">Your clients don't just need another destination.</h2>
+        <p class="body" data-i18n="board.body">They deserve stories worth remembering. Talk to us about becoming the launch agency.</p>
+        <div class="pass">
+          <div class="pass-main">
+            <div class="pass-row">
+              <div><small data-i18n="pass.from">From</small><strong>ATH</strong><span data-i18n="pass.fromPlace">Athens, Greece</span></div>
+              <i class="ph ph-airplane-in-flight pass-plane"></i>
+              <div class="right"><small data-i18n="pass.to">To</small><strong>TUN</strong><span data-i18n="pass.toPlace">Tunisia, its people</span></div>
+            </div>
+            <div class="pass-meta">
+              <div><small data-i18n="pass.contact">Contact</small><span>Dhia Maraouch</span></div>
+              <div><small data-i18n="pass.tn">Tunisia</small><a href="tel:+21655535608">+216 55 535 608</a></div>
+              <div><small data-i18n="pass.gr">Greece</small><a href="tel:+306944681209">+30 694 468 1209</a></div>
+            </div>
+          </div>
+          <div class="pass-stub">
+            <small>Email</small>
+            <a class="mail" href="mailto:dhiamaraouch4@gmail.com">dhiamaraouch4@gmail.com</a>
+            <a class="btn" href="#enquiry"><span data-i18n="cta.partner">Become a partner</span> <i class="ph ph-arrow-down"></i></a>
+          </div>
+        </div>
+
+        <form class="enquiry" id="enquiry" novalidate>
+          <h3 data-i18n="form.title">Request a presentation</h3>
+          <div class="fields">
+            <div class="field">
+              <label for="f-name" data-i18n="form.name">Your name</label>
+              <input id="f-name" name="name" autocomplete="name" required />
+              <p class="err" id="e-name" data-i18n="form.err.name" hidden>Please enter your name.</p>
+            </div>
+            <div class="field">
+              <label for="f-agency" data-i18n="form.agency">Travel agency</label>
+              <input id="f-agency" name="agency" autocomplete="organization" required />
+              <p class="err" id="e-agency" data-i18n="form.err.agency" hidden>Please enter your agency's name.</p>
+            </div>
+            <div class="field">
+              <label for="f-city"><span data-i18n="form.city">City</span> <em data-i18n="form.optional">optional</em></label>
+              <input id="f-city" name="city" autocomplete="address-level2" />
+            </div>
+            <div class="field">
+              <label for="f-email" data-i18n="form.email">Email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required />
+              <p class="err" id="e-email" data-i18n="form.err.email" hidden>Please enter a valid email, for example name@agency.gr.</p>
+            </div>
+            <div class="field field-wide">
+              <label for="f-msg"><span data-i18n="form.message">What would you like to offer your clients?</span> <em data-i18n="form.optional">optional</em></label>
+              <textarea id="f-msg" name="message" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-foot">
+            <button class="btn" type="submit"><span data-i18n="form.send">Prepare the email</span> <i class="ph ph-paper-plane-tilt"></i></button>
+            <p class="help" data-i18n="form.help">Opens your email app with the message ready. Nothing is stored on this page.</p>
+          </div>
+          <div class="done" id="form-done" hidden>
+            <p data-i18n="form.done">Your email is ready in your mail app. If it did not open, copy the address and message below.</p>
+            <pre id="form-preview"></pre>
+            <button type="button" class="btn btn-ghost btn-sm" id="form-copy"><i class="ph ph-copy"></i><span data-i18n="form.copy">Copy message</span></button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <div class="foot-cta">
+        <h2 class="foot-cta-title" data-i18n="foot.ctaTitle">Bring your clients to Tunisia, story first.</h2>
+        <a class="btn" href="#enquiry"><span data-i18n="form.title">Request a presentation</span> <i class="ph ph-arrow-up-right"></i></a>
+      </div>
+
+      <div class="foot-grid">
+        <div class="foot-brand">
+          <a href="#top" class="brand" aria-label="Mahleha">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="20" r="6" fill="#d0582f"/><circle cx="21" cy="12" r="6" fill="#e6a83a" opacity=".9"/><path d="M11 20 Q 13 8 21 12" fill="none" stroke="#f3ebdc" stroke-width="1.4" stroke-dasharray="1.6 2.2"/></svg>
+            <span>Mahleha</span>
+          </a>
+          <p class="foot-tag" data-i18n="tagline">Discover Tunisia. Feel the Local Life.</p>
+          <p class="foot-about" data-i18n="foot.about">The bridge between Greek travel agencies and the people, places and traditions of Tunisia.</p>
+          <div class="foot-route" aria-hidden="true"><b>ATH</b><span></span><i class="ph ph-airplane-in-flight"></i><span></span><b>TUN</b></div>
+        </div>
+
+        <nav class="foot-col" data-i18n-aria="foot.explore" aria-label="Explore">
+          <h3 data-i18n="foot.explore">Explore</h3>
+          <ul>
+            <li><a href="#bridge" data-i18n="nav.how">How it works</a></li>
+            <li><a href="#tour" data-i18n="nav.places">Places</a></li>
+            <li><a href="#pilot" data-i18n="nav.pilot">Pilot</a></li>
+            <li><a href="#board" data-i18n="cta.partner">Become a partner</a></li>
+          </ul>
+        </nav>
+
+        <div class="foot-col">
+          <h3 data-i18n="pass.contact">Contact</h3>
+          <ul class="foot-contact">
+            <li><i class="ph ph-user"></i><span>Dhia Maraouch</span></li>
+            <li><i class="ph ph-envelope-simple"></i><span class="sel">dhiamaraouch4@gmail.com</span></li>
+            <li><i class="ph ph-phone"></i><span><small data-i18n="pass.tn">Tunisia</small> <span class="sel">+216 55 535 608</span></span></li>
+            <li><i class="ph ph-phone"></i><span><small data-i18n="pass.gr">Greece</small> <span class="sel">+30 694 468 1209</span></span></li>
+          </ul>
+        </div>
+
+        <div class="foot-col">
+          <h3 data-i18n="foot.refs">Cultural references</h3>
+          <ul>
+            <li><a href="https://whc.unesco.org/en/list/37/" target="_blank" rel="noopener" data-i18n="foot.r1">Archaeological Site of Carthage (1979)</a></li>
+            <li><a href="https://whc.unesco.org/en/list/38/" target="_blank" rel="noopener" data-i18n="foot.r2">Amphitheatre of El Jem (1979)</a></li>
+            <li><a href="https://whc.unesco.org/en/list/499/" target="_blank" rel="noopener" data-i18n="foot.r3">Kairouan (1988)</a></li>
+            <li><a href="https://whc.unesco.org/en/list/794/" target="_blank" rel="noopener" data-i18n="foot.r6">Dougga / Thugga (1997)</a></li>
+            <li><a href="https://ich.unesco.org/en/state/tunisia-TN" target="_blank" rel="noopener" data-i18n="foot.r4">Tunisia's intangible heritage, incl. Charfia fishing in Kerkennah</a></li>
+            <li><a href="https://whc.unesco.org/en/statesparties/tn" target="_blank" rel="noopener" data-i18n="foot.r5">Tunisia's World Heritage sites</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="foot-note" data-i18n="foot.refsNote">Factual reference points for storytelling, not confirmation of tours already developed or contracted.</p>
+
+      <details class="foot-credits">
+        <summary><i class="ph ph-camera"></i><span data-i18n="foot.photos">Photographs</span> <span class="count" id="credit-count"></span><i class="ph ph-caret-down caret"></i></summary>
+        <p class="note" data-i18n="foot.photosNote">From Wikimedia Commons, used under their licences.</p>
+        <ul id="credits"></ul>
+        <p class="note" data-i18n="foot.mapNote">Coastlines from Natural Earth (public domain). Route distance is the great-circle distance between Athens and Tunis-Carthage airports.</p>
+      </details>
+
+      <div class="foot-bar">
+        <p>&copy; 2026 Mahleha</p>
+        <a href="#top" class="to-top"><span data-i18n="foot.top">Back to the start</span> <i class="ph ph-arrow-up"></i></a>
+      </div>
+    </div>
+    <p class="foot-word" aria-hidden="true">Mahleha<span lang="ar" dir="rtl">محلاها</span></p>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
