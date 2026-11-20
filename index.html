@@ -54,6 +54,13 @@
     <div class="hud-km"><span id="km">0</span> / <span id="km-total">0</span> <span data-i18n="hud.km">km</span></div>
   </aside>
 
+  <!-- Shown after 3 s without scrolling; a visual hint only, so it stays out of the tab order. -->
+  <button type="button" class="cue" id="cue" tabindex="-1" aria-hidden="true">
+    <span class="cue-mouse"><i></i></span>
+    <span class="cue-text" data-i18n="cue.text">Keep scrolling</span>
+    <span class="cue-arrows"><i class="ph ph-caret-down"></i><i class="ph ph-caret-down"></i></span>
+  </button>
+
   <main id="main">
     <!-- 1. Departure -->
     <section class="chapter hero" id="top" data-chapter="departure">
@@ -142,7 +149,7 @@
     <section class="chapter tour" id="tour" data-chapter="tour" aria-labelledby="tour-title">
       <div class="tour-head">
         <h2 class="h2" id="tour-title" data-i18n="tour.title">Twelve places travellers fall for</h2>
-        <p class="body" data-i18n="tour.body">From Roman Carthage to the Sahara. Keep scrolling and the map hops from one to the next.</p>
+        <p class="body" data-i18n="tour.body">From Roman Carthage to the edge of the Sahara. Keep scrolling and the map hops from one to the next.</p>
       </div>
       <div class="tour-track">
         <div class="tour-stage">
@@ -158,7 +165,7 @@
             <li><a href="#tour-hammamet" data-go="hammamet"><b>08</b><span data-i18n="tour.hammamet.title">Hammamet</span></a></li>
             <li><a href="#tour-eljem" data-go="eljem"><b>09</b><span data-i18n="tour.eljem.title">El Jem</span></a></li>
             <li><a href="#tour-matmata" data-go="matmata"><b>10</b><span data-i18n="tour.matmata.title">Matmata</span></a></li>
-            <li><a href="#tour-douz" data-go="douz"><b>11</b><span data-i18n="tour.douz.title">Douz</span></a></li>
+            <li><a href="#tour-djerba" data-go="djerba"><b>11</b><span data-i18n="tour.djerba.title">Djerba</span></a></li>
             <li><a href="#tour-tozeur" data-go="tozeur"><b>12</b><span data-i18n="tour.tozeur.title">Tozeur</span></a></li>
             </ol>
           </nav>
@@ -263,14 +270,14 @@
               <p class="tour-foot"><span class="tour-km" data-km="matmata"></span></p>
             </div>
           </article>
-          <article class="tour-stop" data-stop="douz" inert>
-            <figure class="tour-photo"><img src="img/douz.webp" data-i18n-alt="tour.douz.alt" alt="Rolling sand dunes of the Sahara near Douz" loading="lazy" width="1500" height="925" /></figure>
+          <article class="tour-stop" data-stop="djerba" inert>
+            <figure class="tour-photo"><img src="img/djerba.webp" data-i18n-alt="tour.djerba.alt" alt="Blue arches and tiled walls inside the El Ghriba synagogue on Djerba" loading="lazy" width="1500" height="1027" /></figure>
             <div class="tour-copy">
-              <p class="tour-meta"><span class="tour-n">11<em>/12</em></span><span data-i18n="tour.douz.region">Gateway to the Sahara</span></p>
-              <h3 data-i18n="tour.douz.title">Douz</h3>
-              <p class="tour-hook" data-i18n="tour.douz.hook">Where the Sahara begins.</p>
-              <p class="tour-body" data-i18n="tour.douz.body">Camel rides into the dunes of the Grand Erg Oriental, and every winter the International Festival of the Sahara.</p>
-              <p class="tour-foot"><span class="tour-km" data-km="douz"></span></p>
+              <p class="tour-meta"><span class="tour-n">11<em>/12</em></span><span data-i18n="tour.djerba.region">Island of the south</span></p>
+              <h3 data-i18n="tour.djerba.title">Djerba</h3>
+              <p class="tour-hook" data-i18n="tour.djerba.hook">An island of many faiths.</p>
+              <p class="tour-body" data-i18n="tour.djerba.body">Palm groves, long beaches and the souks of Houmt Souk. El Ghriba, one of the oldest synagogues in Africa, stands here, and in 2023 UNESCO listed the island's traditional way of settling the land.</p>
+              <p class="tour-foot"><span class="tour-km" data-km="djerba"></span><a href="https://whc.unesco.org/en/list/1640/" target="_blank" rel="noopener"><i class="ph ph-seal-check"></i> <span data-i18n="tour.whc2023">UNESCO World Heritage, 2023</span></a></p>
             </div>
           </article>
           <article class="tour-stop" data-stop="tozeur" inert>
@@ -297,7 +304,7 @@
         <div class="tour-mark" data-place="hammamet" id="tour-hammamet"></div>
         <div class="tour-mark" data-place="eljem" id="tour-eljem"></div>
         <div class="tour-mark" data-place="matmata" id="tour-matmata"></div>
-        <div class="tour-mark" data-place="douz" id="tour-douz"></div>
+        <div class="tour-mark" data-place="djerba" id="tour-djerba"></div>
         <div class="tour-mark" data-place="tozeur" id="tour-tozeur"></div>
         </div>
       </div>
@@ -495,6 +502,7 @@
             <li><a href="https://whc.unesco.org/en/list/38/" target="_blank" rel="noopener" data-i18n="foot.r2">Amphitheatre of El Jem (1979)</a></li>
             <li><a href="https://whc.unesco.org/en/list/499/" target="_blank" rel="noopener" data-i18n="foot.r3">Kairouan (1988)</a></li>
             <li><a href="https://whc.unesco.org/en/list/794/" target="_blank" rel="noopener" data-i18n="foot.r6">Dougga / Thugga (1997)</a></li>
+            <li><a href="https://whc.unesco.org/en/list/1640/" target="_blank" rel="noopener" data-i18n="foot.r7">Djerba, an island settlement pattern (2023)</a></li>
             <li><a href="https://ich.unesco.org/en/state/tunisia-TN" target="_blank" rel="noopener" data-i18n="foot.r4">Tunisia's intangible heritage, incl. Charfia fishing in Kerkennah</a></li>
             <li><a href="https://whc.unesco.org/en/statesparties/tn" target="_blank" rel="noopener" data-i18n="foot.r5">Tunisia's World Heritage sites</a></li>
           </ul>

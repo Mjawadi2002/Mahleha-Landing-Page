@@ -106,7 +106,13 @@ function framed(key) {
   const { near, ...k } = KEYS[key];
   if (!near) return k;
   if (innerWidth < 900) return { ...k, focusLat: k.focusLat - k.ovHeight * 0.3 };
-  return { ...k, focusLon: k.focusLon + k.ovHeight * 0.32 };
+  // put the place in the middle of the open map between the index and the card
+  const idx = $('.tour-index').getBoundingClientRect();
+  const card = $('.tour-cards').getBoundingClientRect();
+  const target = (idx.right + card.left) / 2;
+  const dist = k.ovHeight * Math.hypot(1, k.ovTilt);
+  const unitsPerPx = (2 * dist * Math.tan((42 * Math.PI) / 360)) / innerHeight;
+  return { ...k, focusLon: k.focusLon + ((innerWidth / 2 - target) * unitsPerPx) / 0.8 };
 }
 
 function buildFlightTimeline() {
@@ -285,6 +291,27 @@ menuBtn.addEventListener('click', () => {
 });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { closeMenu(); menuBtn.focus(); } });
 matchMedia('(min-width: 961px)').addEventListener('change', (e) => { if (e.matches) closeMenu(); });
+
+// ---------- idle cue: after 3 s without scrolling, invite the next move ----------
+const cue = $('#cue');
+let idleTimer = null;
+function armCue() {
+  cue.classList.remove('is-on');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    const doc = document.documentElement;
+    const nearEnd = scrollY > doc.scrollHeight - innerHeight * 1.8; // boarding pass and footer: nothing left to discover
+    const busy = !menu.hidden || document.activeElement?.closest?.('form');
+    if (!nearEnd && !busy && !document.hidden) cue.classList.add('is-on');
+  }, 3000);
+}
+['scroll', 'wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, armCue, { passive: true }));
+document.addEventListener('visibilitychange', armCue);
+cue.addEventListener('click', () => {
+  const to = scrollY + innerHeight * 0.85;
+  if (lenis) lenis.scrollTo(to, { duration: 1.4 }); else scrollTo({ top: to });
+});
+armCue();
 
 // ---------- feel: four feelings, cycling while in view ----------
 const fws = $$('.fw'); const fqs = $$('.fq');

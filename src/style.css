@@ -524,3 +524,48 @@ h1, h2, h3 { text-wrap: balance; }
 }
 .menu[hidden] { display: none; }
 @media (max-width: 899px) { .in-tour .hud { opacity: 0; } }
+
+/* ---------- idle scroll cue ---------- */
+.cue {
+  position: fixed; z-index: 45; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  display: inline-flex; align-items: center; gap: 12px; padding: 10px 18px 10px 12px; border-radius: 999px;
+  background: rgba(11, 29, 42, .78); backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: inset 0 0 0 1px rgba(243, 235, 220, .22), 0 18px 40px -16px rgba(0, 0, 0, .7);
+  color: var(--cream); font-size: 14px; font-weight: 500; letter-spacing: .01em; white-space: nowrap;
+  opacity: 0; transform: translate(-50%, 18px) scale(.96); pointer-events: none;
+  transition: opacity .5s var(--ease), transform .7s var(--ease);
+}
+.cue.is-on { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
+.cue:hover { box-shadow: inset 0 0 0 1px rgba(230, 168, 58, .6), 0 18px 40px -16px rgba(0, 0, 0, .7); }
+.cue::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(230, 168, 58, .45);
+}
+.cue.is-on::before { animation: cue-ring 2.4s var(--ease) .3s infinite; }
+.cue-mouse { position: relative; width: 20px; height: 30px; border-radius: 10px; box-shadow: inset 0 0 0 1.5px rgba(243, 235, 220, .7); flex: none; }
+.cue-mouse i { position: absolute; left: 50%; top: 6px; width: 3px; height: 6px; margin-left: -1.5px; border-radius: 2px; background: var(--gold); }
+.cue.is-on .cue-mouse i { animation: cue-wheel 1.6s cubic-bezier(.6, 0, .4, 1) infinite; }
+.cue-text {
+  background: linear-gradient(90deg, var(--cream) 0%, var(--cream) 40%, var(--gold) 50%, var(--cream) 60%, var(--cream) 100%);
+  background-size: 250% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.cue.is-on .cue-text { animation: cue-shine 3s ease-in-out .6s infinite; }
+.cue-arrows { display: grid; line-height: 0; font-size: 13px; color: var(--gold); }
+.cue-arrows i:last-child { margin-top: -6px; }
+.cue.is-on .cue-arrows i { animation: cue-arrow 1.6s ease-in-out infinite; }
+.cue.is-on .cue-arrows i:last-child { animation-delay: .18s; }
+@keyframes cue-wheel { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(10px); opacity: 0; } 100% { transform: translateY(10px); opacity: 0; } }
+@keyframes cue-arrow { 0%, 100% { opacity: .25; transform: translateY(-2px); } 50% { opacity: 1; transform: translateY(2px); } }
+@keyframes cue-shine { 0% { background-position: 100% 0; } 60%, 100% { background-position: 0 0; } }
+@keyframes cue-ring { 0% { box-shadow: 0 0 0 0 rgba(230, 168, 58, .45); } 80%, 100% { box-shadow: 0 0 0 14px rgba(230, 168, 58, 0); } }
+@media (max-width: 899px) {
+  /* the tour card sits at the bottom on phones, so the cue moves under the nav there */
+  .in-tour .cue { bottom: auto; top: calc(72px + env(safe-area-inset-top, 0px)); }
+  .cue { font-size: 13px; padding: 8px 14px 8px 10px; }
+  .cue-mouse { width: 18px; height: 27px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue, .cue.is-on { transition: opacity .3s; transform: translate(-50%, 0); }
+  .cue.is-on::before, .cue.is-on .cue-mouse i, .cue.is-on .cue-text, .cue.is-on .cue-arrows i { animation: none; }
+  .cue-text { color: var(--cream); background: none; }
+}

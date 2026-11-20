@@ -76,18 +76,18 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
     "artist": "Lohen11"
   },
-  "douz": {
-    "title": "File:Le désert de Douz.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Le_d%C3%A9sert_de_Douz.jpg",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-    "artist": "Smailtn"
-  },
   "tozeur": {
     "title": "File:Barque sur une mer de sel à Chott Jrid.jpg",
     "page": "https://commons.wikimedia.org/wiki/File:Barque_sur_une_mer_de_sel_%C3%A0_Chott_Jrid.jpg",
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "artist": "Atef Ouni"
+  },
+  "djerba": {
+    "title": "File:Synagogue de la Ghriba Djerba 11.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Synagogue_de_la_Ghriba_Djerba_11.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "IssamBarhoumi"
   }
 }

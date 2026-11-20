@@ -12,7 +12,7 @@ export const TOUR = [
   { key: 'hammamet', lon: 10.6153, lat: 36.3993, h: 2.2 },
   { key: 'eljem', lon: 10.7069, lat: 35.2964, h: 2.2, unesco: { year: 1979, url: 'https://whc.unesco.org/en/list/38/' } },
   { key: 'matmata', lon: 9.967, lat: 33.5426, h: 2.4 },
-  { key: 'douz', lon: 9.02, lat: 33.457, h: 2.4 },
+  { key: 'djerba', lon: 10.8592, lat: 33.8139, h: 2.4, unesco: { year: 2023, url: 'https://whc.unesco.org/en/list/1640/' } },
   { key: 'tozeur', lon: 8.1335, lat: 33.9197, h: 2.6 },
 ];
 
