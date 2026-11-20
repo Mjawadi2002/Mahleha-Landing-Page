@@ -569,3 +569,11 @@ h1, h2, h3 { text-wrap: balance; }
   .cue.is-on::before, .cue.is-on .cue-mouse i, .cue.is-on .cue-text, .cue.is-on .cue-arrows i { animation: none; }
   .cue-text { color: var(--cream); background: none; }
 }
+
+/* ---------- form: sent state + honeypot ---------- */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.enquiry { position: relative; }
+.sent { margin-top: 22px; padding: 16px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: flex-start; background: rgba(43, 125, 153, .16); box-shadow: inset 0 0 0 1px rgba(127, 182, 201, .3); animation: rise .6s var(--ease) both; }
+.sent .ph { color: #8fd3a8; font-size: 22px; flex: none; margin-top: 1px; }
+.sent p { color: var(--cream); }
+.enquiry [type=submit][disabled] { opacity: .7; cursor: progress; transform: none; }

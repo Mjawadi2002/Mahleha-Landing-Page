@@ -32,6 +32,10 @@ function captureEnglish() {
   ENGLISH['form.copied'] = 'Copied';
   ENGLISH['form.subject'] = 'Becoming a Mahleha partner';
   ENGLISH['tour.km'] = '{n} km from Tunis-Carthage airport';
+  ENGLISH['form.sending'] = 'Sending…';
+  ENGLISH['form.ok'] = 'Thank you. Your request has reached the Mahleha team, and a copy is on its way to {email}.';
+  ENGLISH['form.okNoCopy'] = 'Thank you. Your request has reached the Mahleha team. We will reply to {email}.';
+  ENGLISH['form.rate'] = 'Too many requests from this connection. Please try again in a few minutes.';
 }
 function initialLang() {
   if (location.hash === '#el') return 'el';
@@ -372,7 +376,7 @@ function fieldError(id, show) {
   err.hidden = !show;
   return show;
 }
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const v = Object.fromEntries(new FormData(form).entries());
   const bad = [
@@ -382,6 +386,30 @@ form.addEventListener('submit', (e) => {
   ];
   const first = ['name', 'agency', 'email'][bad.indexOf(true)];
   if (first) { $('#f-' + first).focus(); return; }
+  $('#form-sent').hidden = true; $('#form-done').hidden = true;
+
+  // 1. send through the site's own mail function (Vercel /api/contact)
+  const btn = $('[type=submit]', form); const btnLabel = $('span', btn);
+  btn.disabled = true; btnLabel.textContent = t('form.sending');
+  let res = null; let data = {};
+  try {
+    res = await fetch('api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...v, lang }) });
+    data = await res.json().catch(() => ({}));
+  } catch { /* offline, or a host with no mail function: fall back below */ }
+  btn.disabled = false; btnLabel.textContent = t('form.send');
+  if (res?.ok && data.ok) {
+    $('#form-sent-text').textContent = t(data.confirm ? 'form.ok' : 'form.okNoCopy').replace('{email}', v.email.trim());
+    $('#form-sent').hidden = false;
+    form.reset();
+    return;
+  }
+  if (res?.status === 429) {
+    $('#form-sent-text').textContent = t('form.rate');
+    $('#form-sent').hidden = false;
+    return;
+  }
+
+  // 2. fallback: prepare the email in the visitor's own mail app
   const lines = [
     `${t('form.name')}: ${v.name.trim()}`,
     `${t('form.agency')}: ${v.agency.trim()}`,

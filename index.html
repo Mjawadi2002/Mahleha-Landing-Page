@@ -438,17 +438,22 @@
               <input id="f-email" name="email" type="email" autocomplete="email" required />
               <p class="err" id="e-email" data-i18n="form.err.email" hidden>Please enter a valid email, for example name@agency.gr.</p>
             </div>
+            <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off" /></label></div>
             <div class="field field-wide">
               <label for="f-msg"><span data-i18n="form.message">What would you like to offer your clients?</span> <em data-i18n="form.optional">optional</em></label>
               <textarea id="f-msg" name="message" rows="3"></textarea>
             </div>
           </div>
           <div class="form-foot">
-            <button class="btn" type="submit"><span data-i18n="form.send">Prepare the email</span> <i class="ph ph-paper-plane-tilt"></i></button>
-            <p class="help" data-i18n="form.help">Opens your email app with the message ready. Nothing is stored on this page.</p>
+            <button class="btn" type="submit"><span data-i18n="form.send">Send request</span> <i class="ph ph-paper-plane-tilt"></i></button>
+            <p class="help" data-i18n="form.help">Goes straight to the Mahleha team, and you receive a copy by email.</p>
+          </div>
+          <div class="sent" id="form-sent" role="status" hidden>
+            <i class="ph ph-check-circle"></i>
+            <p id="form-sent-text"></p>
           </div>
           <div class="done" id="form-done" hidden>
-            <p data-i18n="form.done">Your email is ready in your mail app. If it did not open, copy the address and message below.</p>
+            <p data-i18n="form.done">We could not send it from this page, so your email app has the message ready. If it did not open, copy the address and message below.</p>
             <pre id="form-preview"></pre>
             <button type="button" class="btn btn-ghost btn-sm" id="form-copy"><i class="ph ph-copy"></i><span data-i18n="form.copy">Copy message</span></button>
           </div>
