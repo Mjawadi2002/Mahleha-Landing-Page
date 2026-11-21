@@ -415,7 +415,7 @@ function setLeaving(on) {
   leaving = on;
   document.documentElement.classList.toggle('leaving', on);
   if (flight) flight.state.theme = on ? 1 : 0;
-  if (!on) { document.documentElement.classList.remove('souv-on'); if (flight) flight.state.showcase = 0; }
+  if (!on) { document.documentElement.classList.remove('in-cabin'); if (flight) flight.state.cabin = 0; }
   $('meta[name=theme-color]')?.setAttribute('content', on ? '#0b1a2a' : '#0a2343');
   const [code, city] = $$('.flap');
   code.dataset.flap = on ? 'ATH' : 'TUN';
@@ -434,28 +434,52 @@ ScrollTrigger.create({
     else if (self.direction > 0) setLeaving(false); // the Aegean mood stays until the visitor heads to Tunisia again
     const descent = $('.descent').getBoundingClientRect();
     const inDescent = descent.top < innerHeight * 0.5 && descent.bottom > innerHeight * 0.5;
-    updateShowcase();
+    updateCabin();
     document.documentElement.classList.toggle('bye-on', leaving && !inDescent && tourTop > innerHeight && self.scroll() > innerHeight * 0.6);
   },
 });
 
-// ---------- the way home: a souvenir showcase around the plane while crossing the descent ----------
-const souvItems = $$('.souv-item'); const souvDots = $$('.souv-dots i'); let souvOn = -1;
-function updateShowcase() {
-  const d = $('.descent'); const r = d.getBoundingClientRect();
-  const p = Math.min(1, Math.max(0, -r.top / Math.max(1, d.offsetHeight - innerHeight)));
-  const n = souvItems.length;
-  const active = leaving && r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.5 && p > 0.02 && p < 0.84;
-  document.documentElement.classList.toggle('souv-on', active);
-  if (flight) flight.state.showcase = active ? 1 : 0;
-  if (!active) return;
-  const i = Math.min(n - 1, Math.max(0, Math.floor(((0.84 - p) / 0.8) * n)));
-  if (i === souvOn) return;
-  souvOn = i;
-  if (flight) flight.state.item = i;
-  souvItems.forEach((el, k) => el.classList.toggle('is-on', k === i));
-  souvDots.forEach((dot, k) => dot.classList.toggle('is-on', k <= i));
-  $('.souv-n').textContent = `${i + 1} / ${n}`;
+// ---------- the way home, inside the cabin: the bag unzips and the gifts come out one by one ----------
+const gifts = $$('.gift'); let cabinTl = null; let cabinOn = false;
+function buildCabin() {
+  cabinTl?.kill();
+  const zone = $('.bag-zone').getBoundingClientRect(); const narrow = innerWidth < 760;
+  const lift = narrow ? -Math.min(230, innerHeight * 0.27) : -Math.min(260, innerHeight * 0.28);
+  // where each gift settles once shown: a fan on both sides of the bag
+  const park = gifts.map((_, i) => {
+    const side = i % 2 ? 1 : -1; const row = Math.floor(i / 2);
+    const x = narrow ? side * (70 + row * 20) : side * (zone.width * 0.5 + 60 + row * (innerWidth * 0.07));
+    const y = narrow ? lift * 0.25 - row * 14 : lift * 0.42 - row * 22 + (row % 2) * 26;
+    return { x, y, r: side * (6 + row * 3), s: narrow ? 0.32 : 0.5 };
+  });
+  cabinTl = gsap.timeline({ paused: true });
+  cabinTl.to('.bag-lid', { rotateX: -110, duration: 0.6, ease: 'power2.out' }, 0)
+    .to('.bag-zip', { scaleX: 0, duration: 0.6, ease: 'power2.out' }, 0);
+  gifts.forEach((g, i) => {
+    const t0 = 0.7 + i * 1.1;
+    cabinTl.fromTo(g, { x: 0, y: 40, yPercent: -100, scale: 0.2, rotate: (i % 2 ? 8 : -8), opacity: 0 },
+      { x: 0, y: lift, yPercent: -100, scale: 1, rotate: (i % 2 ? 2 : -2), opacity: 1, duration: 0.5, ease: 'back.out(1.4)' }, t0)
+      .fromTo($('figcaption', g), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 }, t0 + 0.3)
+      .to($('figcaption', g), { opacity: 0, duration: 0.15 }, t0 + 0.85)
+      .to(g, { x: park[i].x, y: park[i].y, yPercent: -100, scale: park[i].s, rotate: park[i].r, duration: 0.35, ease: 'power2.inOut' }, t0 + 0.85);
+  });
+  cabinTl.to({}, { duration: 0.4 });
+}
+buildCabin();
+addEventListener('resize', () => { buildCabin(); updateCabin(); });
+function updateCabin() {
+  const sec = $('.shift'); const r = sec.getBoundingClientRect();
+  const inView = r.top < innerHeight * 0.6 && r.bottom > innerHeight * 0.4;
+  const on = leaving && inView;
+  if (on !== cabinOn) { cabinOn = on; document.documentElement.classList.toggle('in-cabin', on); }
+  if (flight) flight.state.cabin = on ? 1 : 0;
+  if (!leaving) return;
+  // scrolling up through the section plays the unpacking forward
+  const p = Math.min(1, Math.max(0, -r.top / Math.max(1, sec.offsetHeight - innerHeight)));
+  const tp = reduced ? 1 : 1 - p;
+  cabinTl.progress(tp);
+  const shown = Math.max(0, Math.min(gifts.length, Math.floor((tp * cabinTl.duration() - 0.7) / 1.1) + 1));
+  $('.gc-n').textContent = String(shown);
 }
 
 // ---------- pilot steps light up one after another along the rail ----------

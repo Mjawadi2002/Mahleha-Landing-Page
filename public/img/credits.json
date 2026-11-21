@@ -521,5 +521,77 @@
     "artist": "Habib M'henni",
     "name_en": "The Mos Espa Star Wars set",
     "name_el": "Το σκηνικό Μος Έσπα του Star Wars"
+  },
+  "gift-chechia": {
+    "title": "File:Chechia megidi de Belhassen Troudi.JPG",
+    "page": "https://commons.wikimedia.org/wiki/File:Chechia_megidi_de_Belhassen_Troudi.JPG",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "artist": "Troudi",
+    "name_en": "Chechia",
+    "name_el": "Σεσία"
+  },
+  "gift-harissa": {
+    "title": "File:Harissa Sauce.JPG",
+    "page": "https://commons.wikimedia.org/wiki/File:Harissa_Sauce.JPG",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "artist": "Miansari66",
+    "name_en": "Harissa",
+    "name_el": "Χαρίσα"
+  },
+  "gift-oil": {
+    "title": "File:Produits d'huiles d'olives tunisiennes en France.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Produits_d%27huiles_d%27olives_tunisiennes_en_France.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "Mohatatou",
+    "name_en": "Tunisian olive oil",
+    "name_el": "Τυνησιακό ελαιόλαδο"
+  },
+  "gift-dates": {
+    "title": "File:Une grappe de datte avant la récolte , palmeraie de tozeur - tunisie.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Une_grappe_de_datte_avant_la_r%C3%A9colte_,_palmeraie_de_tozeur_-_tunisie.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "Skander zarrad",
+    "name_en": "Dates in a Tozeur palm grove",
+    "name_el": "Χουρμάδες σε φοινικώνα του Τοζέρ"
+  },
+  "gift-cage": {
+    "title": "File:Tunis Souk1.JPG",
+    "page": "https://commons.wikimedia.org/wiki/File:Tunis_Souk1.JPG",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "artist": "Selmaej",
+    "name_en": "Birdcage in a Tunis souk",
+    "name_el": "Κλουβί σε σουκ της Τύνιδας"
+  },
+  "gift-rose": {
+    "title": "File:Roses des Sables Tunisie.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Roses_des_Sables_Tunisie.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "Didier Descouens",
+    "name_en": "Desert roses from Tunisia",
+    "name_el": "Ρόδα της ερήμου από την Τυνησία"
+  },
+  "gift-pottery": {
+    "title": "File:Medium Nabeul plate.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Medium_Nabeul_plate.jpg",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "artist": "Nicholas Johnson from Brookline, MA, USA",
+    "name_en": "Nabeul plate",
+    "name_el": "Πιάτο από το Ναμπέλ"
+  },
+  "gift-jasmine": {
+    "title": "File:Jasmins et fell de Tunisie, 28 juin 2024 04.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Jasmins_et_fell_de_Tunisie,_28_juin_2024_04.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "Habib M'henni",
+    "name_en": "Tunisian jasmine",
+    "name_el": "Τυνησιακό γιασεμί"
   }
 }
