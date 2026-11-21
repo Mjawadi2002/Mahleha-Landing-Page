@@ -1011,3 +1011,14 @@ h1, h2, h3 { text-wrap: balance; }
 .cabin-copy h2 { color: #8a1a3c; }
 .cabin-body { color: #26313f; font-weight: 500; }
 .cabin-count { color: #26313f; }
+
+/* homebound bridge cards: traveller thank-you quotes swap in for the process cards */
+.stop .ph.v-back, .stop .tag.v-back { display: none; }
+.leaving .stop .ph.v-out, .leaving .stop .tag.v-out { display: none; }
+.leaving .stop .ph.v-back { display: grid; }
+.leaving .stop .tag.v-back { display: block; }
+.leaving .stop h3.v-back { font-family: var(--serif); font-style: italic; }
+
+/* pilot steps: centred under their icons, all on one baseline */
+.psteps li { justify-items: center; text-align: center; align-content: start; transform: none; }
+.psteps h3 { margin-top: 0; text-wrap: balance; }
