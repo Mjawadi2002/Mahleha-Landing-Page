@@ -941,18 +941,18 @@ h1, h2, h3 { text-wrap: balance; }
 /* the cabin wall, with oval windows cut out: the live 3D sea and sky show through them */
 .cabin-wall { position: absolute; inset: 0;
   background: radial-gradient(120% 90% at 50% 40%, #f1ece4, #ddd6cb 70%, #c9c1b4);
-  --wy: 34%;
+  --wy: 62%;
   -webkit-mask: radial-gradient(ellipse 4.4vw 8.2vw at 14% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 38% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 62% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 86% var(--wy), transparent 97%, #000 100%);
   -webkit-mask-composite: source-in;
   mask: radial-gradient(ellipse 4.4vw 8.2vw at 14% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 38% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 62% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 4.4vw 8.2vw at 86% var(--wy), transparent 97%, #000 100%);
   mask-composite: intersect; }
-.cabin-windows span { position: absolute; top: 34%; width: 8.8vw; height: 16.4vw; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 1.1vw #e6e0d6, 0 0 0 1.4vw #cfc7ba, inset 0 0 30px rgba(0, 0, 0, .45), 0 10px 30px -10px rgba(0, 0, 0, .35); }
+.cabin-windows span { position: absolute; top: 62%; width: 8.8vw; height: 16.4vw; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 1.1vw #e6e0d6, 0 0 0 1.4vw #cfc7ba, inset 0 0 30px rgba(0, 0, 0, .45), 0 10px 30px -10px rgba(0, 0, 0, .35); }
 .cabin-windows span:nth-child(1) { left: 14%; } .cabin-windows span:nth-child(2) { left: 38%; } .cabin-windows span:nth-child(3) { left: 62%; } .cabin-windows span:nth-child(4) { left: 86%; }
 .cabin-windows span::after { content: ''; position: absolute; left: 12%; right: 12%; top: -8%; height: 30%; border-radius: 50% 50% 10px 10px; background: linear-gradient(#ece6dc, #ddd5c8); box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
 .cabin-bins { position: absolute; left: 0; right: 0; top: 0; height: 13%; background: linear-gradient(#cfc8bc, #e8e2d8 70%, #bdb5a8); box-shadow: 0 8px 24px -8px rgba(0, 0, 0, .35); display: flex; align-items: flex-end; justify-content: space-around; }
 .bin-seam { width: 2px; height: 70%; background: rgba(0, 0, 0, .12); }
 .cabin-sign { position: absolute; right: 6%; bottom: 14%; padding: 4px 10px; border-radius: 6px; background: #1d232c; color: var(--gold); font-size: 14px; box-shadow: 0 0 14px color-mix(in srgb, var(--gold) 55%, transparent); }
-.cabin-copy { position: absolute; left: 0; right: 0; top: 15%; text-align: center; color: #18212d; padding: 0 var(--gutter); z-index: 2; pointer-events: none; }
+.cabin-copy { position: absolute; left: 50%; top: 15%; width: max-content; max-width: min(92vw, 760px); margin-left: 0; translate: -50% 0; text-align: center; color: #18212d; padding: 18px 30px 20px; border-radius: 22px; background: color-mix(in srgb, #f1ece4 94%, transparent); box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .35); z-index: 2; pointer-events: none; }
 .cabin-copy h2 { font-family: 'Fraunces', 'Literata', Georgia, serif; font-style: italic; font-weight: 600; font-size: clamp(34px, 4.6vw, 72px); line-height: 1; letter-spacing: -0.02em; margin-top: 6px; }
 .cabin-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
 .cabin-body { color: #4a5563; margin-top: 8px; font-size: clamp(15px, 1.3vw, 18px); }
@@ -979,10 +979,10 @@ h1, h2, h3 { text-wrap: balance; }
 .gift figcaption span { display: block; font-size: 13.5px; color: rgba(243, 240, 234, .78); margin-top: 4px; line-height: 1.45; }
 .gift figcaption::before { content: ''; position: absolute; left: -6px; bottom: 22px; width: 12px; height: 12px; background: #172131; transform: rotate(45deg); }
 @media (max-width: 760px) {
-  .cabin-wall { --wy: 42%;
+  .cabin-wall { --wy: 62%;
     -webkit-mask: radial-gradient(ellipse 9vw 15vw at 22% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 9vw 15vw at 78% var(--wy), transparent 97%, #000 100%);
     mask: radial-gradient(ellipse 9vw 15vw at 22% var(--wy), transparent 97%, #000 100%), radial-gradient(ellipse 9vw 15vw at 78% var(--wy), transparent 97%, #000 100%); -webkit-mask-composite: source-in; mask-composite: intersect; }
-  .cabin-windows span { top: 42%; width: 18vw; height: 30vw; box-shadow: 0 0 0 2.2vw #e6e0d6, 0 0 0 2.8vw #cfc7ba, inset 0 0 20px rgba(0, 0, 0, .45); }
+  .cabin-windows span { top: 62%; width: 18vw; height: 30vw; box-shadow: 0 0 0 2.2vw #e6e0d6, 0 0 0 2.8vw #cfc7ba, inset 0 0 20px rgba(0, 0, 0, .45); }
   .cabin-windows span:nth-child(1) { left: 22%; } .cabin-windows span:nth-child(2) { left: 78%; } .cabin-windows span:nth-child(3), .cabin-windows span:nth-child(4) { display: none; }
   .cabin-copy { top: 13%; }
   .seat { width: 34%; height: 30%; }
