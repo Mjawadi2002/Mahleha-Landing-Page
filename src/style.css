@@ -69,7 +69,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .skip:focus { left: 16px; }
 
 /* ---------- layers (z scale: 0 canvas, 1 labels, 2 content, 40 hud, 50 nav, 60 grain) ---------- */
-#flight { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+/* the canvas takes the largest viewport, so the address bar sliding never resizes it */
+#flight { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 0; display: block; }
 #labels { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .map-label {
   position: absolute; left: 0; top: 0; opacity: 0; transition: opacity .5s var(--ease);
@@ -141,7 +142,7 @@ h1, h2, h3 { text-wrap: balance; }
 .chapter { position: relative; padding-inline: var(--wrap); }
 
 /* Hero: the Athens photo sits in an aircraft window that the flight pulls us out of */
-.hero { min-height: 100dvh; display: grid; align-items: end; padding-bottom: clamp(48px, 9vh, 110px); }
+.hero { min-height: 100vh; min-height: 100svh; display: grid; align-items: end; padding-bottom: clamp(48px, 9vh, 110px); }
 .window {
   position: absolute; inset: 0; overflow: hidden; will-change: clip-path, transform;
   clip-path: inset(0 0 0 0 round 0px);
@@ -166,8 +167,8 @@ h1, h2, h3 { text-wrap: balance; }
 .name-def em { font-family: var(--serif); color: var(--cream); font-style: italic; }
 
 /* Bridge: pinned, four stops light up along a rail */
-.bridge { min-height: 100dvh; }
-.bridge-pin { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 100px 0 60px; }
+.bridge { min-height: 100vh; min-height: 100svh; }
+.bridge-pin { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 100px 0 60px; }
 .stops { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; counter-reset: s; }
 .stop {
   position: relative; padding: 26px 24px 28px; border-radius: var(--r);
@@ -188,7 +189,7 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* Shift: each conventional line turns into the Mahleha line */
 .shift { min-height: 240vh; }
-.shift-inner { position: sticky; top: 0; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 90px 0 40px; }
+.shift-inner { position: sticky; top: 0; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 90px 0 40px; }
 .morph { list-style: none; margin-top: 40px; max-width: 860px; }
 .morph li {
   display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 16px;
@@ -408,12 +409,12 @@ h1, h2, h3 { text-wrap: balance; }
 .tour-head { margin-bottom: 4vh; }
 .tour-track { position: relative; }
 .tour-stage {
-  position: sticky; top: 0; height: 100vh; height: 100dvh;
+  position: sticky; top: 0; height: 100vh; height: 100svh;
   display: grid; grid-template-columns: minmax(150px, 210px) 1fr; align-items: center; gap: 24px;
   padding: 88px 0 28px; pointer-events: none;
 }
 .tour-stage > * { pointer-events: auto; }
-.tour-marks { margin-top: -65vh; margin-top: -65dvh; }
+.tour-marks { margin-top: -65vh; margin-top: -65svh; }
 .tour-mark { height: 85vh; }
 .tour-mark:last-child { height: 100vh; }
 
@@ -730,7 +731,7 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ---------- descent: through the clouds into Tunisia ---------- */
 .descent { min-height: 280vh; padding: 0; }
-.descent-inner { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 90px var(--gutter) 60px;
+.descent-inner { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 90px var(--gutter) 60px;
   background: radial-gradient(120% 70% at 50% 110%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 60%), radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--aegean) 18%, transparent), transparent 70%); }
 .clouds { position: absolute; inset: 0; pointer-events: none; }
 .cl { position: absolute; width: 70vw; height: 42vh; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--cream) 70%, transparent), color-mix(in srgb, var(--cream) 25%, transparent) 55%, transparent); filter: blur(18px); will-change: transform; }
@@ -934,8 +935,9 @@ h1, h2, h3 { text-wrap: balance; }
 /* ---------- the way home: inside the cabin ---------- */
 .shift-out { transition: opacity .6s var(--ease); }
 .leaving .shift-out { opacity: 0; pointer-events: none; }
-.cabin { position: absolute; top: 0; bottom: 0; left: calc(-1 * var(--wrap)); right: calc(-1 * var(--wrap)); overflow: hidden; opacity: 0; pointer-events: none; transition: opacity .8s var(--ease); }
-.leaving .cabin { opacity: 1; }
+/* the cabin is pinned to the screen; --cv (0..1, set from scroll in main.js) opens it out of one oval window */
+.cabin { --cv: 0; position: fixed; inset: 0; z-index: 6; overflow: hidden; pointer-events: none; visibility: hidden; will-change: clip-path, transform; }
+.leaving .cabin { visibility: visible; clip-path: ellipse(calc(5% + var(--cv) * 100%) calc(9% + var(--cv) * 100%) at 50% 46%); transform: scale(calc(1.16 - var(--cv) * 0.16)); }
 /* the cabin wall, with oval windows cut out: the live 3D sea and sky show through them */
 .cabin-wall { position: absolute; inset: 0;
   background: radial-gradient(120% 90% at 50% 40%, #f1ece4, #ddd6cb 70%, #c9c1b4);
@@ -994,3 +996,13 @@ h1, h2, h3 { text-wrap: balance; }
 .in-cabin .bye-toast, .in-cabin .hud, .in-cabin .cue { opacity: 0 !important; }
 /* a faint reflection on the window glass */
 .cabin-windows span::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, .08)); }
+
+/* ---------- lite mode (touch devices other than iOS): no frosted-glass blur, which is costly on many phone GPUs ---------- */
+.lite *, .lite *::before, .lite *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.lite .stop, .lite .story-copy, .lite .tour-copy, .lite .tour-stop, .lite .enquiry, .lite .psteps, .lite .flow, .lite .panel ul, .lite .tabs, .lite .nav.is-solid, .lite .menu, .lite .cue, .lite .bye-toast, .lite .arrivals { background-color: color-mix(in srgb, var(--bg-deep) 92%, transparent); }
+.lite .grain { display: none; }
+
+/* ---------- entering the cabin: it opens out of one oval window, the view zooms in, then the contents arrive ---------- */
+.cabin-copy, .bag-zone, .seat { opacity: clamp(0, calc((var(--cv) - 0.5) * 2.4), 1); }
+.cabin-copy { transform: translateY(calc((1 - var(--cv)) * 30px)); }
+.bag-zone { translate: 0 calc((1 - var(--cv)) * 60px); }

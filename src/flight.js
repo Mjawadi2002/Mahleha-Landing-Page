@@ -202,9 +202,9 @@ function glowTexture(inner = 'rgba(255,255,255,1)') {
 }
 
 // ---------- scene ----------
-export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
+export function createFlight(canvas, labelLayer, { reduced = false, lite = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1.25 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x0b1a2a, 1);
   const shadows = !reduced && window.innerWidth >= 700;
@@ -455,8 +455,12 @@ export function createFlight(canvas, labelLayer, { reduced = false } = {}) {
   const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
   if (!reduced) window.addEventListener('pointermove', (e) => { pointer.x = e.clientX / innerWidth - 0.5; pointer.y = e.clientY / innerHeight - 0.5; }, { passive: true });
 
+  let sizedW = 0; let sizedH = 0;
   function resize() {
     const w = canvas.clientWidth; const h = canvas.clientHeight;
+    // on phones the canvas is sized to the large viewport, so small height changes are the address bar: skip them
+    if (w === sizedW && Math.abs(h - sizedH) < 160 && sizedW) return;
+    sizedW = w; sizedH = h;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     // narrow screens need a wider lens so both coasts fit

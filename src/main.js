@@ -24,6 +24,17 @@ import { EL, PLACE_LABELS, CREDIT_NAMES } from './i18n.js';
 import { TOUR, TUN, haversineKm } from './places.js';
 
 gsap.registerPlugin(ScrollTrigger);
+// phones: the address bar showing/hiding must not re-measure the whole page
+ScrollTrigger.config({ ignoreMobileResize: true });
+const touch = matchMedia('(pointer: coarse)').matches;
+const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const lite = touch && !iOS;
+if (lite) document.documentElement.classList.add('lite');
+// run a handler only when the width really changes (height changes on phones are the address bar)
+function onWidthChange(fn) {
+  let w = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== w) { w = innerWidth; fn(); } });
+}
 let lang = 'en';
 const ENGLISH = {};
 function captureEnglish() {
@@ -82,7 +93,7 @@ async function startFlight() {
     ROUTE_KM = mod.ROUTE_KM;
     $('#km-total').textContent = Math.round(ROUTE_KM).toLocaleString('en-US');
     $('#pass-km').textContent = Math.round(ROUTE_KM).toLocaleString('en-US');
-    flight = mod.createFlight($('#flight'), $('#labels'), { reduced });
+    flight = mod.createFlight($('#flight'), $('#labels'), { reduced, lite });
     applyMapLabels();
   } catch (err) {
     // WebGL unavailable: the page still reads top to bottom over the navy background.
@@ -466,13 +477,20 @@ function buildCabin() {
   cabinTl.to({}, { duration: 0.4 });
 }
 buildCabin();
-addEventListener('resize', () => { buildCabin(); updateCabin(); });
+onWidthChange(() => { buildCabin(); updateCabin(); });
 function updateCabin() {
-  const sec = $('.shift'); const r = sec.getBoundingClientRect();
-  const inView = r.top < innerHeight * 0.6 && r.bottom > innerHeight * 0.4;
-  const on = leaving && inView;
+  const sec = $('.shift'); const r = sec.getBoundingClientRect(); const ih = innerHeight;
+  // how much of the cabin is open: grows as the section slides in from above, shrinks as it leaves at the bottom
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+  const enter = clamp01((r.bottom - ih * 0.2) / (ih * 0.75));
+  const exit = r.top > 0 ? clamp01(1 - r.top / (ih * 0.75)) : 1;
+  const raw = leaving ? Math.min(enter, exit) : 0;
+  const vis = raw * raw * (3 - 2 * raw); // smoothstep
+  $('.cabin').style.setProperty('--cv', vis.toFixed(4));
+  const on = vis > 0.5;
   if (on !== cabinOn) { cabinOn = on; document.documentElement.classList.toggle('in-cabin', on); }
-  if (flight) flight.state.cabin = on ? 1 : 0;
+  if (flight) flight.state.cabin = vis;
+  $('.cabin').style.visibility = vis > 0.002 ? 'visible' : 'hidden';
   if (!leaving) return;
   // scrolling up through the section plays the unpacking forward
   const p = Math.min(1, Math.max(0, -r.top / Math.max(1, sec.offsetHeight - innerHeight)));
@@ -493,7 +511,7 @@ function fitRail() {
   const x0 = first.left + first.width / 2; const x1 = last.left + last.width / 2;
   Object.assign(rail.style, { left: `${x0 - box.left}px`, right: 'auto', width: `${Math.max(0, x1 - x0)}px`, top: `${first.top + first.height / 2 - box.top - 1}px` });
 }
-fitRail(); addEventListener('resize', fitRail); ScrollTrigger.addEventListener('refresh', fitRail);
+fitRail(); onWidthChange(fitRail); ScrollTrigger.addEventListener('refresh', fitRail);
 ScrollTrigger.create({
   trigger: '.psteps', start: 'top 80%', end: 'bottom 45%', scrub: true,
   onUpdate: (self) => {
