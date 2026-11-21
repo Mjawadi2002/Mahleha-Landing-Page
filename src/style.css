@@ -1006,3 +1006,8 @@ h1, h2, h3 { text-wrap: balance; }
 .cabin-copy, .bag-zone, .seat { opacity: clamp(0, calc((var(--cv) - 0.5) * 2.4), 1); }
 .cabin-copy { transform: translateY(calc((1 - var(--cv)) * 30px)); }
 .bag-zone { translate: 0 calc((1 - var(--cv)) * 60px); }
+
+/* cabin heading: strong contrast on its cream panel */
+.cabin-copy h2 { color: #8a1a3c; }
+.cabin-body { color: #26313f; font-weight: 500; }
+.cabin-count { color: #26313f; }
