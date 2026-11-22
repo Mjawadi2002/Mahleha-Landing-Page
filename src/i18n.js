@@ -336,13 +336,15 @@ export const PLACE_LABELS = {
     athens: ['Athens', 'Greece'], tunis: ['Tunis', 'Tunisia'], sejnane: ['Sejnane', 'UNESCO Intangible Heritage 2018'], kerkennah: ['Kerkennah', 'Charfia fishing'],
     carthage: ['Carthage', 'UNESCO 1979'], sidi: ['Sidi Bou Said', ''], marsa: ['La Marsa', ''], bizerte: ['Bizerte', ''],
     aindraham: ['Aïn Draham', ''], dougga: ['Dougga', 'UNESCO 1997'], kairouan: ['Kairouan', 'UNESCO 1988'], hammamet: ['Hammamet', ''],
-    eljem: ['El Jem', 'UNESCO 1979'], matmata: ['Matmata', ''], djerba: ['Djerba', 'UNESCO 2023'], tozeur: ['Tozeur', 'Sahara'],
+    eljem: ['El Jem', 'UNESCO 1979'], matmata: ['Matmata', 'Star Wars set, 1977'],
+    parthenon: ['Parthenon', 'Acropolis · UNESCO 1987'], sounion: ['Temple of Poseidon', 'Cape Sounion'], epidaurus: ['Theatre of Epidaurus', 'UNESCO 1988'], djerba: ['Djerba', 'UNESCO 2023'], tozeur: ['Tozeur', 'Sahara'],
   },
   el: {
     athens: ['Αθήνα', 'Ελλάδα'], tunis: ['Τύνιδα', 'Τυνησία'], sejnane: ['Sejnane', 'Άυλη Κληρονομιά UNESCO 2018'], kerkennah: ['Κερκένα', 'Ψάρεμα με charfia'],
     carthage: ['Καρχηδόνα', 'UNESCO 1979'], sidi: ['Σιντί Μπου Σαΐντ', ''], marsa: ['Λα Μάρσα', ''], bizerte: ['Μπιζέρτη', ''],
     aindraham: ['Αΐν Ντραχάμ', ''], dougga: ['Ντούγκα', 'UNESCO 1997'], kairouan: ['Καϊρουάν', 'UNESCO 1988'], hammamet: ['Χαμαμέτ', ''],
-    eljem: ['Ελ Τζεμ', 'UNESCO 1979'], matmata: ['Ματμάτα', ''], djerba: ['Τζέρμπα', 'UNESCO 2023'], tozeur: ['Τοζέρ', 'Σαχάρα'],
+    eljem: ['Ελ Τζεμ', 'UNESCO 1979'], matmata: ['Ματμάτα', 'Σκηνικό του Star Wars, 1977'],
+    parthenon: ['Παρθενώνας', 'Ακρόπολη · UNESCO 1987'], sounion: ['Ναός του Ποσειδώνα', 'Σούνιο'], epidaurus: ['Αρχαίο Θέατρο Επιδαύρου', 'UNESCO 1988'], djerba: ['Τζέρμπα', 'UNESCO 2023'], tozeur: ['Τοζέρ', 'Σαχάρα'],
   },
 };
 

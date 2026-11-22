@@ -3,7 +3,7 @@
    with a single terracotta colour-block at the descent. */
 /* Two moods (no orange, no yellow anywhere).
    Greece to Tunisia (default): the colours of Tunisia, flag red, Sidi Bou Said blue and jasmine white on a deep night blue.
-   Tunisia to Greece (html.leaving): the Acropolis, a light theme of marble white, beige and warm stone with Attic ink blue and olive. */
+   Tunisia to Greece (html.leaving): the Acropolis, a light theme of aged parchment, old cream and warm stone with Attic ink blue and olive. */
 @property --bg-deep { syntax: '<color>'; inherits: true; initial-value: #0a1226; }
 @property --bg { syntax: '<color>'; inherits: true; initial-value: #0d1830; }
 @property --bg-2 { syntax: '<color>'; inherits: true; initial-value: #13213f; }
@@ -38,9 +38,9 @@
     --accent 1.4s ease, --accent-hi 1.4s ease, --accent-soft 1.4s ease, --sea 1.4s ease, --sea-soft 1.4s ease;
 }
 html.leaving {
-  --bg-deep: #e6dfd2; --bg: #f3eee5; --bg-2: #ece5d9; --bg-3: #e0d6c6;
-  --cream: #1f2933; --gold: #4f6b4c;
-  --accent: #23405f; --accent-hi: #2f5379; --accent-soft: #6f8cad; --on-accent: #f7f3ec;
+  --bg-deep: #d6c6a8; --bg: #e4d6bc; --bg-2: #ddcdb1; --bg-3: #cfbd9c;
+  --cream: #2b2620; --gold: #4f6b4c;
+  --accent: #23405f; --accent-hi: #2f5379; --accent-soft: #6f8cad; --on-accent: #f1e6d1;
   --sea: #5b6f86; --sea-soft: #44566b;
   color-scheme: light;
 }
@@ -1024,21 +1024,21 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ---------- the Acropolis mood is a light theme: soften shadows and dark-only details ---------- */
 .leaving .grain { opacity: .035; mix-blend-mode: multiply; }
-.leaving .map-label { text-shadow: 0 1px 10px rgba(243, 238, 229, .95); }
-.leaving .hero .display { text-shadow: 0 2px 24px rgba(20, 24, 30, .35); color: #fbf8f2; }
-.leaving .hero .lede { color: rgba(251, 248, 242, .9); }
-.leaving .hero .btn-ghost { color: #fbf8f2; background: rgba(20, 28, 38, .35); box-shadow: inset 0 0 0 1px rgba(251, 248, 242, .5); }
-.leaving .nav.is-solid { box-shadow: inset 0 -1px 0 rgba(31, 41, 51, .12); }
-.leaving .descent-inner::before { background: radial-gradient(60% 50% at 50% 52%, rgba(243, 238, 229, .9), rgba(243, 238, 229, .55) 60%, rgba(243, 238, 229, .15) 100%); }
+.leaving .map-label { text-shadow: 0 1px 10px rgba(228, 214, 188, .95); }
+.leaving .hero .display { text-shadow: 0 2px 24px rgba(20, 24, 30, .35); color: #f1e6d1; }
+.leaving .hero .lede { color: rgba(241, 230, 209, .9); }
+.leaving .hero .btn-ghost { color: #f1e6d1; background: rgba(20, 28, 38, .35); box-shadow: inset 0 0 0 1px rgba(241, 230, 209, .5); }
+.leaving .nav.is-solid { box-shadow: inset 0 -1px 0 rgba(43, 38, 32, .12); }
+.leaving .descent-inner::before { background: radial-gradient(60% 50% at 50% 52%, rgba(228, 214, 188, .9), rgba(228, 214, 188, .55) 60%, rgba(228, 214, 188, .15) 100%); }
 .leaving .fw-ar { color: var(--gold); }
-.leaving .pass { background: #fbf8f2; color: #1f2933; }
-.leaving .stop-core { background: #23405f; color: #f7f3ec; }
-.leaving .stop-core p { color: rgba(247, 243, 236, .8); }
-.leaving .stop-core .tag, .leaving .stop-core .ph { color: #f7f3ec; }
+.leaving .pass { background: #f1e6d1; color: #2b2620; }
+.leaving .stop-core { background: #23405f; color: #f1e6d1; }
+.leaving .stop-core p { color: rgba(241, 230, 209, .8); }
+.leaving .stop-core .tag, .leaving .stop-core .ph { color: #f1e6d1; }
 .leaving .ps-dot, .leaving .fn-dot { box-shadow: inset 0 0 0 2px currentColor, 0 10px 24px -14px rgba(0, 0, 0, .25); }
-.leaving .foot { box-shadow: inset 0 1px 0 rgba(31, 41, 51, .1); }
-.leaving .foot-word { -webkit-text-stroke: 1px rgba(31, 41, 51, .14); background: linear-gradient(180deg, rgba(31, 41, 51, .08), rgba(31, 41, 51, 0) 85%); -webkit-background-clip: text; background-clip: text; }
-.leaving .flap i { background: linear-gradient(180deg, #2b3746 0 49%, #1f2933 51% 100%); color: #f7f3ec; }
-.leaving .flap i.set { color: #fbf8f2; }
+.leaving .foot { box-shadow: inset 0 1px 0 rgba(43, 38, 32, .1); }
+.leaving .foot-word { -webkit-text-stroke: 1px rgba(43, 38, 32, .14); background: linear-gradient(180deg, rgba(43, 38, 32, .08), rgba(43, 38, 32, 0) 85%); -webkit-background-clip: text; background-clip: text; }
+.leaving .flap i { background: linear-gradient(180deg, #3a332a 0 49%, #2b2620 51% 100%); color: #f1e6d1; }
+.leaving .flap i.set { color: #f1e6d1; }
 .leaving .flap:first-of-type i { color: #b9d4ea; }
-.leaving .arrivals { background: rgba(251, 248, 242, .85); box-shadow: inset 0 0 0 1px rgba(31, 41, 51, .12), 0 20px 50px -24px rgba(31, 41, 51, .35); }
+.leaving .arrivals { background: rgba(241, 230, 209, .85); box-shadow: inset 0 0 0 1px rgba(43, 38, 32, .12), 0 20px 50px -24px rgba(43, 38, 32, .35); }

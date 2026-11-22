@@ -7,6 +7,7 @@ import { feature } from 'topojson-client';
 import land50 from 'world-atlas/land-50m.json';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { buildAirliner } from './plane.js';
+import { buildLandmarks } from './landmarks.js';
 import { TOUR, haversineKm } from './places.js';
 export { haversineKm };
 
@@ -85,9 +86,9 @@ function buildLandCanvas(pxPerDeg) {
 
 // Two map moods: the Aegean on the way out to Tunisia, Tunisia's own colours on the way home.
 export const MAP_THEMES = {
-  // the way home: the Acropolis, marble white land over a warm stone sea, Attic ink route
-  tn: { bg: 0xf3eee5, route: 0x23405f, accent: 0x23405f, dots: 0x1f2933, tunis: 0xd81e34, athens: 0x23405f,
-    deep: 0xd3c9b8, shallow: 0xe4ddd0, sky: 0xf7f3ec, landTop: 0xf2ede4, landSide: 0xb7ab97, coastLight: 0x000000 },
+  // the way home: the Acropolis, old parchment land over a warm stone sea, Attic ink route
+  tn: { bg: 0xe4d6bc, route: 0x23405f, accent: 0x23405f, dots: 0x2b2620, tunis: 0xd81e34, athens: 0x23405f,
+    deep: 0xb09c7a, shallow: 0xc7b693, sky: 0xe2d5bb, landTop: 0xbcae95, landSide: 0x8f7c62, coastLight: 0x000000 },
   // the way out: the colours of Tunisia, deep night blue sea, Sidi Bou Said blue route, flag red accents
   gr: { bg: 0x0d1830, route: 0x6fb2ff, accent: 0xd81e34, dots: 0xf8f5ef, tunis: 0xd81e34, athens: 0x6fb2ff,
     deep: 0x0a1730, shallow: 0x1d5a9e, sky: 0x2d5f9a, landTop: 0x16233f, landSide: 0x0a1226, coastLight: 0x9cc8ff },
@@ -218,7 +219,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
   // a soft studio environment gives the paint real reflections
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.add(new THREE.HemisphereLight(0xdfe8f5, 0x0b1a2a, 0.7));
+  const hemi = new THREE.HemisphereLight(0xdfe8f5, 0x0b1a2a, 0.7); scene.add(hemi);
   const SUN_DIR = new THREE.Vector3(-4, 6, 3).normalize();
   const sun = new THREE.DirectionalLight(0xf2f5fb, 2.4);
   sun.position.copy(SUN_DIR).multiplyScalar(6); scene.add(sun); scene.add(sun.target);
@@ -387,6 +388,20 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     markers[key] = { grp, dot, ring, el, pos, tour: !!p.tour, phase: Math.random() * 6 };
   }
 
+  // landmark miniatures: Tunisia's rise as the plane nears Tunis, Greece's on the way home
+  const lm = buildLandmarks(project, LAND_H);
+  scene.add(lm.group);
+  const lmLabels = lm.items.filter((it) => it.label).map((it) => {
+    const el = document.createElement('div');
+    el.className = 'map-label lm-label'; el.dataset.place = it.key; el.style.opacity = 0;
+    labelLayer.appendChild(el);
+    return { it, el };
+  });
+  for (const it of lm.items) if (markers[it.key]) markers[it.key].site = it;
+  const acro = lm.items.find((it) => it.key === 'parthenon');
+  const acroPos = new THREE.Vector3(); const acroLook = new THREE.Vector3();
+  let homeK = 0;
+
   // Tour path: arcs hopping from one place to the next, drawn up to state.hop.
   const SEG = 64;
   const tourPts = [];
@@ -495,7 +510,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     trailGlow.position.copy(plane.position);
     trailGlow.material.opacity = t > 0.001 && t < 0.999 ? 0.5 : 0;
     routeGeo.setDrawRange(0, Math.floor(t * N) + 1);
-    plane.visible = t < 0.999 && cabinK < 0.5;
+    plane.visible = t < 0.999 && cabinK < 0.5 && homeK < 0.4;
     const hideRoute = 1 - state.tour;
     routeMat.opacity = 0.95 * hideRoute; ghost.material.opacity = 0.18 * hideRoute; shadow.material.opacity = 0.25 * hideRoute;
 
@@ -513,6 +528,20 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     const k = state.overview;
     const targetPos = chasePos.clone().lerp(ovPos, k);
     const targetLook = chaseLook.clone().lerp(ovLook, k);
+    // home again: on the last stretch the camera circles slowly over the Acropolis
+    const homeT = (acro.rise || 0) * (1 - THREE.MathUtils.smoothstep(t, 0.15, 0.27));
+    homeK += (homeT - homeK) * (reduced ? 1 : 0.05);
+    if (homeK > 0.001) {
+      const ang = -0.35 + (reduced ? 0 : Math.sin(time * 0.1) * 0.45);
+      const near = canvas.clientWidth < 700;
+      const dist = near ? 0.78 : 0.62;
+      acroLook.copy(acro.pos); acroLook.y -= 0.06;
+      acroPos.set(acroLook.x + Math.sin(ang) * dist, acroLook.y + dist * 0.55, acroLook.z + Math.cos(ang) * dist);
+      // on wide screens keep the rock right of the hero text
+      if (!near) { const sh = 0.16; acroLook.x -= Math.cos(ang) * sh; acroLook.z += Math.sin(ang) * sh; acroPos.x -= Math.cos(ang) * sh; acroPos.z += Math.sin(ang) * sh; }
+      else { acroLook.z += 0.12; acroPos.z += 0.12; }
+      targetPos.lerp(acroPos, homeK); targetLook.lerp(acroLook, homeK);
+    }
     cabinK += ((state.cabin || 0) - cabinK) * (reduced ? 1 : 0.06);
     if (cabinK > 0.001) {
       // a seat by the window: just beside the fuselage, looking out and down at the sea and the clouds
@@ -529,6 +558,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     camLook.lerp(targetLook, reduced ? 1 : 0.08);
     camera.position.copy(camPos);
     camera.lookAt(camLook);
+    if (import.meta.env.DEV && state.debugCam) { camera.position.copy(state.debugCam.pos); camera.lookAt(state.debugCam.look); }
 
     // clouds
     for (const c of clouds) {
@@ -547,11 +577,21 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
       m.ring.material.opacity = (1 - pulse) * 0.8 * Math.max(vis, 0.35);
       const gate = m.tour ? state.tour : 1 - state.tour;
       m.dot.material.opacity = (0.5 + vis * 0.5) * gate;
+      if (m.site) m.dot.material.opacity *= 1 - (m.site.rise || 0);
       m.ring.material.opacity *= gate;
       const sp = m.pos.clone(); sp.y = 0.05; sp.project(camera);
       const onScreen = sp.z < 1 && Math.abs(sp.x) < 1.1 && Math.abs(sp.y) < 1.1;
       m.el.style.opacity = onScreen ? vis : 0;
       m.el.style.transform = `translate(${(sp.x * 0.5 + 0.5) * w}px, ${(-sp.y * 0.5 + 0.5) * h}px)`;
+    }
+
+    // landmarks rise on their leg of the trip
+    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced });
+    for (const { it, el } of lmLabels) {
+      const sp = it.pos.clone(); sp.y += it.s * 0.3; sp.project(camera);
+      const vis = (it.rise || 0) * (1 - THREE.MathUtils.smoothstep(t, 0.15, 0.27)) * (sp.z < 1 && Math.abs(sp.x) < 1.05 && Math.abs(sp.y) < 1.05 ? 1 : 0);
+      el.style.opacity = vis;
+      el.style.transform = `translate(${(sp.x * 0.5 + 0.5) * w}px, ${(-sp.y * 0.5 + 0.5) * h}px)`;
     }
 
     // tour path
@@ -576,6 +616,8 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
       seaMat.uniforms.uShallow.value.lerpColors(TH.tn.shallow, TH.gr.shallow, k);
       seaMat.uniforms.uSky.value.lerpColors(TH.tn.sky, TH.gr.sky, k);
       landTop.color.lerpColors(TH.tn.landTop, TH.gr.landTop, k);
+      // the parchment mood is bright already: a softer, warmer sun keeps it from washing out
+      sun.intensity = 2.4 - 1.05 * k; hemi.intensity = 0.7 - 0.25 * k; sun.color.setRGB(0.95 + 0.03 * k, 0.96 - 0.02 * k, 0.98 - 0.08 * k);
       landTop.emissive.lerpColors(TH.tn.coastLight, TH.gr.coastLight, k);
       landSide.color.lerpColors(TH.tn.landSide, TH.gr.landSide, k);
       mixC.lerpColors(TH.tn.route, TH.gr.route, k);
@@ -618,5 +660,5 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     if (running && !was) { clock.getDelta(); requestAnimationFrame(frame); }
   });
 
-  return { state };
+  return { state, landmarks: lm };
 }
