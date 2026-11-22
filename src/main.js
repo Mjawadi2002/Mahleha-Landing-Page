@@ -427,7 +427,7 @@ function setLeaving(on) {
   document.documentElement.classList.toggle('leaving', on);
   if (flight) flight.state.theme = on ? 1 : 0;
   if (!on) { document.documentElement.classList.remove('in-cabin'); if (flight) flight.state.cabin = 0; }
-  $('meta[name=theme-color]')?.setAttribute('content', on ? '#0b1a2a' : '#0a2343');
+  $('meta[name=theme-color]')?.setAttribute('content', on ? '#f3eee5' : '#0d1830');
   const [code, city] = $$('.flap');
   code.dataset.flap = on ? 'ATH' : 'TUN';
   city.dataset.flap = on ? 'ATHENS' : 'TUNIS-CARTHAGE';

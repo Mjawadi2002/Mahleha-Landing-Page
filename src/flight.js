@@ -85,12 +85,12 @@ function buildLandCanvas(pxPerDeg) {
 
 // Two map moods: the Aegean on the way out to Tunisia, Tunisia's own colours on the way home.
 export const MAP_THEMES = {
-  tn: { seaIn: '#142a40', seaOut: '#0b1a2a', land: '#1c2b46', coast: 'rgba(226,234,246,0.44)', glow: 'rgba(111,216,191,0.30)',
-    bg: 0x0b1a2a, route: 0x6fd8bf, accent: 0xc93460, dots: 0xf5f1ea, tunis: 0xd23a5f, athens: 0x6fd8bf,
-    deep: 0x0a1726, shallow: 0x1b4a5a, sky: 0x2a4a66, landTop: 0x0f1a2c, landSide: 0x070d18, coastLight: 0x9fe8d6 },
-  gr: { seaIn: '#16457a', seaOut: '#0a2343', land: '#1c4a7e', coast: 'rgba(225,240,255,0.55)', glow: 'rgba(159,211,255,0.32)',
-    bg: 0x0a2343, route: 0x9fd3ff, accent: 0x2371d4, dots: 0xf3f7fc, tunis: 0xd23a5f, athens: 0x9fd3ff,
-    deep: 0x0a2140, shallow: 0x2a78b8, sky: 0x5d9fd8, landTop: 0x0f2c52, landSide: 0x061529, coastLight: 0xd6ecff },
+  // the way home: the Acropolis, marble white land over a warm stone sea, Attic ink route
+  tn: { bg: 0xf3eee5, route: 0x23405f, accent: 0x23405f, dots: 0x1f2933, tunis: 0xd81e34, athens: 0x23405f,
+    deep: 0xd3c9b8, shallow: 0xe4ddd0, sky: 0xf7f3ec, landTop: 0xf2ede4, landSide: 0xb7ab97, coastLight: 0x000000 },
+  // the way out: the colours of Tunisia, deep night blue sea, Sidi Bou Said blue route, flag red accents
+  gr: { bg: 0x0d1830, route: 0x6fb2ff, accent: 0xd81e34, dots: 0xf8f5ef, tunis: 0xd81e34, athens: 0x6fb2ff,
+    deep: 0x0a1730, shallow: 0x1d5a9e, sky: 0x2d5f9a, landTop: 0x16233f, landSide: 0x0a1226, coastLight: 0x9cc8ff },
 };
 
 
@@ -367,7 +367,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     const t = new THREE.CanvasTexture(c); return t;
   })();
   const markers = {};
-  const COLORS = { athens: 0x6fd8bf, tunis: 0xd23a5f, kerkennah: 0xd23a5f };
+  const COLORS = { athens: 0x6fb2ff, tunis: 0xd81e34, kerkennah: 0xd81e34 };
   const ALL = { ...PLACES };
   for (const p of TOUR) ALL[p.key] = { ...p, label: p.key, sub: '', tour: true };
   for (const [key, p] of Object.entries(ALL)) {
