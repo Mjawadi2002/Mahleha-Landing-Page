@@ -15,9 +15,11 @@ const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness
 function mats() {
   if (M) return M;
   M = {
-    stone: std(0xc8b99e), stoneDk: std(0xa08f74), marble: std(0xd9d1c2, { roughness: 0.7 }),
-    rock: std(0x8f8575), earth: std(0xa48f6e, { side: THREE.DoubleSide }), sand: std(0xc6b796), hill: std(0x8c8768, { side: THREE.DoubleSide }),
-    hollow: std(0x2a2623, { roughness: 1 }), olive: std(0x5a6b4b), trunk: std(0x5e4f40),
+    stone: std(0xcfc2a8, { emissive: 0x1e1b16 }), stoneDk: std(0x9f8d74, { emissive: 0x100d0a }), marble: std(0xdcd4c4, { roughness: 0.7, emissive: 0x1c1a16 }),
+    dome: std(0xe6e0d4, { emissive: 0x1c1b18 }),
+    rock: std(0x8f8575), earth: std(0x9c8670, { side: THREE.DoubleSide, emissive: 0x0e0b08 }), sand: std(0xc4b59c, { emissive: 0x141210 }),
+    hill: std(0x667a4c, { side: THREE.DoubleSide, emissive: 0x080d04 }), grass: std(0x587f45, { emissive: 0x081005 }),
+    hollow: std(0x1c1916, { roughness: 1 }), olive: std(0x4f7a3a, { emissive: 0x081205 }), palm: std(0x3f7f3a, { side: THREE.DoubleSide, emissive: 0x071205 }), trunk: std(0x6a5440),
     water: std(0x2a6fb8, { roughness: 0.15, flatShading: false, envMapIntensity: 0.9 }),
     hull: std(0xf4f0e8, { roughness: 0.55 }), blue: std(0x2f7de1, { roughness: 0.45 }), wood: std(0x6d5a47),
     sail: std(0xf6f2ea, { side: THREE.DoubleSide, roughness: 0.85 }),
@@ -100,6 +102,15 @@ function tree(k, x, z, s = 1, y = 0) {
   k.cyl('trunk', 0.004 * s, 0.006 * s, 0.022 * s, x, y, z, 5);
   k.put('olive', new THREE.IcosahedronGeometry(0.02 * s, 0), { x, y: y + 0.032 * s, z });
 }
+function palm(k, x, z, s = 1, y = 0) {
+  const h = 0.07 * s;
+  k.put('trunk', new THREE.CylinderGeometry(0.003 * s, 0.005 * s, h, 5), { x, y: y + h / 2, z, rz: 0.08 });
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    const leaf = new THREE.PlaneGeometry(0.04 * s, 0.009 * s); leaf.translate(0.02 * s, 0, 0);
+    k.put('palm', leaf, { x: x + 0.006 * s, y: y + h, z, rx: -Math.PI / 2, rz: -0.45, ry: a });
+  }
+}
 // a peripteral Greek temple: nl columns on the long sides (x), ns on the ends (z)
 function temple(k, { nl, ns, sp, r, h, y = 0, x = 0, z = 0, mat = 'marble', stand = () => true, ends = true }) {
   const L = (nl - 1) * sp; const W = (ns - 1) * sp;
@@ -151,6 +162,7 @@ function elJem() {
     k.put('stone', archGeo(len * 1.03, H, D, len * 0.58, H * 0.5, tier ? 0.12 : 0.03), { x: mx, y: tier * H, z: mz, ry });
     k.put('stoneDk', new THREE.BoxGeometry(len * 1.04, 0.007, D * 1.3), { x: mx, y: (tier + 1) * H, z: mz, ry });
   }
+  k.put('hollow', ellipseSlab(A - D * 0.55, B - D * 0.55, A - D * 0.8, B - D * 0.8, H * 2.9));
   // the cavea: seating stepping down from the outer wall to the arena wall
   const steps = 7;
   for (let j = 0; j < steps; j++) {
@@ -159,6 +171,7 @@ function elJem() {
     k.put(j % 2 ? 'stone' : 'stoneDk', ellipseSlab(a, b, 0.22, 0.16, H * 2.5 * (1 - u) + 0.02));
   }
   k.put('sand', ellipseSlab(0.22, 0.16, 0, 0, 0.012));
+  for (let i = 0; i < 14; i++) { const a = rand() * Math.PI * 2; const d = 1.18 + rand() * 0.25; tree(k, Math.cos(a) * A * d, Math.sin(a) * B * d, 1.3); }
   return k.build();
 }
 
@@ -180,19 +193,22 @@ function kairouan() {
   for (const sx of [-1, 1]) {
     k.box('stone', pd, 0.008, hallZ + L / 2 - T - pd, sx * (inner - pd / 2), WH * 0.78, (hallZ - L / 2 + T + pd) / 2);
     arcade(k, 'stone', sx * (inner - pd), -L / 2 + T + pd, sx * (inner - pd), hallZ, 8, WH * 0.78, 0.012);
+    k.box('hollow', 0.004, WH * 0.7, hallZ + L / 2 - T - pd, sx * (inner - pd * 0.5), 0.006, (hallZ - L / 2 + T + pd) / 2);
   }
   k.box('stone', W - 2 * T, 0.008, pd, 0, WH * 0.78, -L / 2 + T + pd / 2);
   arcade(k, 'stone', -inner + pd, -L / 2 + T + pd, inner - pd, -L / 2 + T + pd, 7, WH * 0.78, 0.012);
+  k.box('hollow', W - 2 * T - 2 * pd, WH * 0.7, 0.004, 0, 0.006, -L / 2 + T + pd * 0.5);
   // prayer hall, its courtyard facade and the raised central nave
   const hallL = L / 2 - T - hallZ;
   k.box('stone', W - 2 * T, WH * 1.05, hallL, 0, 0, hallZ + hallL / 2);
-  arcade(k, 'stoneDk', -inner, hallZ - 0.004, inner, hallZ - 0.004, 11, WH * 1.0, 0.01);
+  k.box('hollow', W - 2 * T, WH * 0.9, 0.004, 0, 0, hallZ + 0.004);
+  arcade(k, 'stone', -inner, hallZ - 0.006, inner, hallZ - 0.006, 11, WH * 1.0, 0.01);
   k.box('stone', 0.09, WH * 1.35, hallL, 0, 0, hallZ + hallL / 2);
   for (const [dz, r] of [[0.045, 0.045], [hallL - 0.05, 0.05]]) {
     const y = WH * 1.35;
     k.box('stone', r * 2.1, 0.012, r * 2.1, 0, y, hallZ + dz);
     k.cyl('stone', r, r, 0.02, 0, y + 0.012, hallZ + dz, 16);
-    k.put('stone', new THREE.SphereGeometry(r, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2), { y: y + 0.032, z: hallZ + dz });
+    k.put('dome', new THREE.SphereGeometry(r, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2), { y: y + 0.032, z: hallZ + dz });
   }
   // the minaret: three square storeys, each a little narrower, crowned by a small dome
   const mz = -L / 2 + 0.065; let y = 0;
@@ -201,7 +217,9 @@ function kairouan() {
     k.cyl('stoneDk', rt * 1.06, rt * 1.06, 0.006, 0, y + h - 0.006, mz, 4, Math.PI / 4);
     y += h;
   }
-  k.put('stone', new THREE.SphereGeometry(0.03, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { y, z: mz });
+  k.put('dome', new THREE.SphereGeometry(0.03, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { y, z: mz });
+  // the town's olive groves around the walls
+  { const rand = rng(17); for (let i = 0; i < 16; i++) { const a = rand() * Math.PI * 2; const d = 0.62 + rand() * 0.18; tree(k, Math.cos(a) * d * 0.75, Math.sin(a) * d, 1.3); } }
   for (const fy of [0.05, 0.1]) k.box('hollow', 0.014, 0.02, 0.004, 0, fy, mz + 0.066);
   return k.build();
 }
@@ -242,7 +260,9 @@ function carthage() {
   // the Antonine Baths on the shore (east = sea) with the one column raised again to full
   // height, and further south-west the round Punic war harbour with its central island
   const k = new Kit(); const rand = rng(3);
-  k.box('sand', 0.62, 0.016, 0.42, 0, 0, 0);
+  k.box('grass', 0.7, 0.012, 0.5, 0, 0, 0);
+  k.box('sand', 0.6, 0.016, 0.4, 0, 0, 0);
+  { const pr = rng(23); for (let i = 0; i < 9; i++) palm(k, -0.33 + pr() * 0.12 + (i % 3) * 0.3, i < 3 ? -0.23 : i < 6 ? 0.23 : -0.02 + pr() * 0.05, 1.3, 0.012); }
   for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) {
     if (rand() < 0.25) continue;
     const x = -0.25 + i * 0.1; const z = -0.16 + j * 0.105; const h = 0.015 + rand() * 0.05;
@@ -255,9 +275,9 @@ function carthage() {
   k.box('stoneDk', 0.05, 0.004, 0.05, 0.17, 0.316, 0.02);
   // Punic ports
   const px = -0.36; const pz = 0.42;
-  k.cyl('sand', 0.2, 0.21, 0.016, px, 0, pz, 32);
+  k.cyl('grass', 0.2, 0.21, 0.016, px, 0, pz, 32);
   k.cyl('water', 0.14, 0.14, 0.018, px, 0, pz, 32);
-  k.cyl('sand', 0.05, 0.055, 0.03, px, 0, pz, 24);
+  k.cyl('grass', 0.05, 0.055, 0.03, px, 0, pz, 24);
   for (let i = 0; i < 16; i++) {
     const a = (i / 16) * Math.PI * 2;
     k.box('stone', 0.004, 0.012, 0.03, px + Math.cos(a) * 0.035, 0.03, pz + Math.sin(a) * 0.035, -a + Math.PI / 2);
@@ -278,7 +298,7 @@ function matmata() {
       k.put('hollow', archGeo(0.06 * R, 0.075 * R, 0.012, 0.048 * R, 0.045 * R, 0), { x: x + Math.cos(a) * 0.154 * R, y: 0.016, z: z + Math.sin(a) * 0.154 * R, ry: -a + Math.PI / 2 });
     }
   }
-  for (let i = 0; i < 6; i++) tree(k, -0.35 + rand() * 0.7, 0.25 + rand() * 0.15, 0.9);
+  for (let i = 0; i < 7; i++) palm(k, -0.4 + rand() * 0.8, 0.3 + rand() * 0.15, 1.4);
   return k.build();
 }
 
@@ -396,13 +416,13 @@ function shadowDisc(size) {
 
 // key, real coordinates, model, size on the map (scene units), heading, which leg it belongs to
 const SITES = [
-  { key: 'carthage', lon: 10.3317, lat: 36.8528, make: carthage, s: 0.13, ry: 0, leg: 'tn', d: 0.0, dx: -0.07, dz: 0.03 },
-  { key: 'dougga', lon: 9.2183, lat: 36.4236, make: dougga, s: 0.16, ry: 0, leg: 'tn', d: 0.12 },
-  { key: 'kairouan', lon: 10.1036, lat: 35.6814, make: kairouan, s: 0.19, ry: 0.52, leg: 'tn', d: 0.2 },
-  { key: 'eljem', lon: 10.7069, lat: 35.2964, make: elJem, s: 0.19, ry: 0, leg: 'tn', d: 0.26 },
-  { key: 'matmata', lon: 9.967, lat: 33.5426, make: matmata, s: 0.2, ry: 0, leg: 'tn', d: 0.34 },
-  { key: 'boat', lon: 10.88, lat: 33.95, make: boat, s: 0.07, ry: 0.6, leg: 'tn', d: 0.38, sea: true },
-  { key: 'boat2', lon: 10.98, lat: 33.92, make: boat, s: 0.055, ry: -2.2, leg: 'tn', d: 0.4, sea: true },
+  { key: 'carthage', lon: 10.3317, lat: 36.8528, make: carthage, s: 0.2, ry: 0, leg: 'tn', d: 0.0, dx: -0.1, dz: 0.04 },
+  { key: 'dougga', lon: 9.2183, lat: 36.4236, make: dougga, s: 0.27, ry: 0, leg: 'tn', d: 0.12 },
+  { key: 'kairouan', lon: 10.1036, lat: 35.6814, make: kairouan, s: 0.3, ry: 0.52, leg: 'tn', d: 0.2 },
+  { key: 'eljem', lon: 10.7069, lat: 35.2964, make: elJem, s: 0.3, ry: 0, leg: 'tn', d: 0.26 },
+  { key: 'matmata', lon: 9.967, lat: 33.5426, make: matmata, s: 0.3, ry: 0, leg: 'tn', d: 0.34 },
+  { key: 'boat', lon: 10.88, lat: 33.95, make: boat, s: 0.11, ry: 0.6, leg: 'tn', d: 0.38, sea: true },
+  { key: 'boat2', lon: 10.98, lat: 33.92, make: boat, s: 0.09, ry: -2.2, leg: 'tn', d: 0.4, sea: true },
   { key: 'parthenon', lon: 23.7267, lat: 37.9715, make: acropolis, s: 0.26, ry: 0, leg: 'gr', d: 0, label: true },
   { key: 'sounion', lon: 24.0247, lat: 37.6503, make: sounion, s: 0.15, ry: 0, leg: 'gr', d: 0.15, label: true },
   { key: 'epidaurus', lon: 23.0794, lat: 37.5961, make: epidaurus, s: 0.17, ry: 0, leg: 'gr', d: 0.25, label: true },
@@ -420,7 +440,7 @@ export function buildLandmarks(project, landH) {
     return { ...site, holder, model, sh, pos: holder.position, bob: Math.random() * 6 };
   });
   const ease = (x) => { const c = 1.4; return 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2; }; // easeOutBack
-  function update(time, { tn, gr, reduced }) {
+  function update(time, { tn, gr, reduced, cam }) {
     for (const it of items) {
       const lead = it.leg === 'tn' ? tn : gr;
       const r = THREE.MathUtils.smoothstep(lead, it.d, it.d + 0.55);
@@ -428,7 +448,10 @@ export function buildLandmarks(project, landH) {
       it.holder.visible = r > 0.002;
       if (!it.holder.visible) continue;
       const e = reduced ? r : ease(r);
-      it.holder.scale.set(it.s * (0.7 + 0.3 * r), it.s * Math.max(0.001, e), it.s * (0.7 + 0.3 * r));
+      const far = cam ? THREE.MathUtils.clamp(cam.distanceTo(it.pos) / 2.6, 1, it.leg === 'tn' ? 1.7 : 1.3) : 1;
+      it.far = it.far ? it.far + (far - it.far) * 0.15 : far;
+      const sz = it.s * it.far;
+      it.holder.scale.set(sz * (0.7 + 0.3 * r), sz * Math.max(0.001, e), sz * (0.7 + 0.3 * r));
       if (it.sh) it.sh.material.opacity = 0.55 * r;
       if (it.sea && !reduced) {
         it.model.position.y = Math.sin(time * 1.4 + it.bob) * 0.02;

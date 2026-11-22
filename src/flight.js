@@ -586,7 +586,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     }
 
     // landmarks rise on their leg of the trip
-    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced });
+    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced, cam: camera.position });
     for (const { it, el } of lmLabels) {
       const sp = it.pos.clone(); sp.y += it.s * 0.3; sp.project(camera);
       const vis = (it.rise || 0) * (1 - THREE.MathUtils.smoothstep(t, 0.15, 0.27)) * (sp.z < 1 && Math.abs(sp.x) < 1.05 && Math.abs(sp.y) < 1.05 ? 1 : 0);
@@ -605,6 +605,8 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     tourHead.position.copy(headPos);
     tourHead.scale.setScalar(THREE.MathUtils.clamp(state.ovHeight * 0.05, 0.05, 0.3));
     tourHead.material.opacity = state.tour * (reduced ? 0.8 : 0.75 + Math.sin(time * 4) * 0.2);
+    // soften the cursor once it reaches a stop, so it does not wash out the landmark standing there
+    tourHead.material.opacity *= 0.25 + 0.75 * THREE.MathUtils.smoothstep(Math.abs(hop - Math.round(hop)), 0, 0.25);
 
     // theme: glide every map colour between the two moods
     themeK += (state.theme - themeK) * (reduced ? 1 : 0.035);
