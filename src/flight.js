@@ -389,7 +389,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
   }
 
   // landmark miniatures: Tunisia's rise as the plane nears Tunis, Greece's on the way home
-  const lm = buildLandmarks(project, LAND_H);
+  const lm = buildLandmarks(project, LAND_H, TOUR.map((p) => p.key));
   scene.add(lm.group);
   const lmLabels = lm.items.filter((it) => it.label).map((it) => {
     const el = document.createElement('div');
@@ -586,7 +586,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     }
 
     // landmarks rise on their leg of the trip
-    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced, cam: camera.position });
+    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced, cam: camera.position, hop: state.hop, tour: state.tour });
     for (const { it, el } of lmLabels) {
       const sp = it.pos.clone(); sp.y += it.s * 0.3; sp.project(camera);
       const vis = (it.rise || 0) * (1 - THREE.MathUtils.smoothstep(t, 0.15, 0.27)) * (sp.z < 1 && Math.abs(sp.x) < 1.05 && Math.abs(sp.y) < 1.05 ? 1 : 0);
@@ -656,6 +656,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+  if (import.meta.env.DEV) window.__frame = (n = 1) => { for (let i = 0; i < n; i++) frame(); }; // render on demand when the pane is hidden
 
   document.addEventListener('visibilitychange', () => {
     const was = running; running = !document.hidden;
