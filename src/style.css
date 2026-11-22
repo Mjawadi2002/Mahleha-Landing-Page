@@ -733,7 +733,7 @@ h1, h2, h3 { text-wrap: balance; }
 .descent-inner { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 90px var(--gutter) 60px;
   background: radial-gradient(120% 70% at 50% 110%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 60%), radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--aegean) 18%, transparent), transparent 70%); }
 .clouds { position: absolute; inset: 0; pointer-events: none; }
-.cl { position: absolute; width: 70vw; height: 42vh; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--cream) 70%, transparent), color-mix(in srgb, var(--cream) 25%, transparent) 55%, transparent); filter: blur(18px); will-change: transform; }
+.cl { position: absolute; width: 70vw; height: 42vh; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--cream) 62%, transparent), color-mix(in srgb, var(--cream) 30%, transparent) 40%, color-mix(in srgb, var(--cream) 8%, transparent) 75%, transparent); will-change: transform; }
 .cl-1 { left: -18vw; top: 4vh; } .cl-2 { right: -20vw; top: 0; width: 80vw; }
 .cl-3 { left: -24vw; top: 38vh; width: 64vw; opacity: .8; } .cl-4 { right: -26vw; top: 42vh; opacity: .85; }
 .cl-5 { left: -10vw; bottom: -14vh; width: 60vw; opacity: .7; } .cl-6 { right: -12vw; bottom: -18vh; width: 66vw; opacity: .7; }
@@ -1085,3 +1085,7 @@ html[dir=rtl] .split-chars, html[dir=rtl] .foot-word, html[dir=rtl] .pass-code, 
 html[dir=rtl] a[href^="tel:"], html[dir=rtl] a[href^="mailto:"], html[dir=rtl] .pass [dir], html[dir=rtl] input[type=email] { direction: ltr; unicode-bidi: isolate; }
 html[dir=rtl] .pass .ph-airplane-tilt, html[dir=rtl] .pass .ph-airplane, html[dir=rtl] .pass .ph-airplane-in-flight, html[dir=rtl] .bye-toast .ph-airplane-tilt { transform: scaleX(-1); }
 html[dir=rtl] .foot-route .ph { transform: scaleX(-1); }
+
+/* the live 3D cabin; the drawn one stays as the fallback without WebGL */
+.cabin-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cabin-gl-on .cabin-scene { display: none; }

@@ -11,20 +11,70 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 let M;
-const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0, flatShading: true, envMapIntensity: 0.2, ...o });
+const SHARED = { uTime: { value: 0 } };
+// Stone that looks worn: two octaves of value noise on the object-space position break up the flat
+// colour, optional horizontal joints mark the courses of blocks, both fading out with distance.
+function weather(mat, { grain = 0.22, scale = 60, course = 0, sparkle = false } = {}) {
+  mat.vertexColors = true;
+  mat.customProgramCacheKey = () => `lm-${grain}-${scale}-${course}-${sparkle}`;
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = SHARED.uTime;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vLmPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLmPos = position;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+      varying vec3 vLmPos; uniform float uTime;
+      float lmHash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+      float lmNoise(vec3 x){ vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(lmHash(i), lmHash(i + vec3(1,0,0)), f.x), mix(lmHash(i + vec3(0,1,0)), lmHash(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(lmHash(i + vec3(0,0,1)), lmHash(i + vec3(1,0,1)), f.x), mix(lmHash(i + vec3(0,1,1)), lmHash(i + vec3(1,1,1)), f.x), f.y), f.z); }`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+      {
+        vec3 q = vLmPos * ${scale.toFixed(1)};
+        float n = lmNoise(q) * 0.62 + lmNoise(q * 3.7) * 0.38;
+        float fade = 1.0 - smoothstep(0.2, 1.2, length(fwidth(q)));
+        diffuseColor.rgb *= 1.0 + (n - 0.5) * ${grain.toFixed(2)} * fade;
+        ${course > 0 ? `float cy = vLmPos.y / ${course.toFixed(4)}; float cw = fwidth(cy);
+        float joint = 1.0 - smoothstep(0.0, max(cw * 1.2, 0.07), min(fract(cy), 1.0 - fract(cy)));
+        diffuseColor.rgb *= 1.0 - joint * 0.22 * (1.0 - smoothstep(0.25, 0.6, cw));` : ''}
+      }`);
+    if (sparkle) {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        { float w = sin(vLmPos.x * 90.0 + uTime * 1.6) * sin(vLmPos.z * 76.0 - uTime * 1.3) + sin((vLmPos.x + vLmPos.z) * 140.0 + uTime * 2.4) * 0.5;
+          totalEmissiveRadiance += vec3(0.85, 0.92, 1.0) * pow(max(w, 0.0) / 1.5, 6.0) * 0.9; }`);
+    }
+  };
+  return mat;
+}
+const std = (color, o = {}, w = {}) => weather(new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, flatShading: true, envMapIntensity: 0.18, ...o }), w);
+const STONE = { grain: 0.3, scale: 70, course: 0.012 };
 function mats() {
   if (M) return M;
   M = {
-    stone: std(0xcfc2a8, { emissive: 0x1e1b16 }), stoneDk: std(0x9f8d74, { emissive: 0x100d0a }), marble: std(0xdcd4c4, { roughness: 0.7, emissive: 0x1c1a16 }),
-    dome: std(0xe6e0d4, { emissive: 0x1c1b18 }),
-    rock: std(0x8f8575), earth: std(0x9c8670, { side: THREE.DoubleSide, emissive: 0x0e0b08 }), sand: std(0xc4b59c, { emissive: 0x141210 }), dune: std(0xb59d7c, { emissive: 0x0d0a07 }),
-    hill: std(0x56693f, { side: THREE.DoubleSide, emissive: 0x060a03 }), grass: std(0x4d7140, { emissive: 0x060c04 }),
-    hollow: std(0x1c1916, { roughness: 1 }), olive: std(0x4f7a3a, { emissive: 0x081205 }), palm: std(0x3f7f3a, { side: THREE.DoubleSide, emissive: 0x071205 }), trunk: std(0x6a5440),
-    water: std(0x2a6fb8, { roughness: 0.15, flatShading: false, envMapIntensity: 0.9 }),
-    hull: std(0xf4f0e8, { roughness: 0.55 }), blue: std(0x2f7de1, { roughness: 0.45 }), wood: std(0x6d5a47),
-    sail: std(0xf6f2ea, { side: THREE.DoubleSide, roughness: 0.85 }),
-    white: std(0xeeebe4, { emissive: 0x22211e }), roof: std(0x9e3a34, { emissive: 0x140505 }), snow: std(0xf5f7fa, { side: THREE.DoubleSide, emissive: 0x2a2c30 }),
-    forest: std(0x355a33, { emissive: 0x061006 }), brick: std(0xa4947e, { emissive: 0x0f0d0a }),
+    // limestone of Carthage and Dougga
+    stone: std(0xcabb9c, { emissive: 0x1a160f }, STONE), stoneDk: std(0x9a8769, { emissive: 0x0e0b07 }, STONE),
+    // El Jem's honey sandstone
+    sandstone: std(0xcfb187, { emissive: 0x1c140a }, STONE), sandstoneDk: std(0xa38660, { emissive: 0x100b05 }, STONE),
+    // Kairouan's ochre walls and pale domes
+    ochre: std(0xc6a27a, { emissive: 0x1a1209 }, STONE), ochreDk: std(0x977654, { emissive: 0x0e0905 }, STONE),
+    dome: std(0xe6dccb, { emissive: 0x1c1913 }, { grain: 0.12, scale: 80 }),
+    // Pentelic marble with its warm patina
+    marble: std(0xe2d8c4, { roughness: 0.62, emissive: 0x1c1913 }, { grain: 0.26, scale: 55 }),
+    rock: std(0x8a7e6b, {}, { grain: 0.4, scale: 30 }),
+    earth: std(0xab8763, { side: THREE.DoubleSide, emissive: 0x100a05 }, { grain: 0.35, scale: 35 }),
+    sand: std(0xc8b693, { emissive: 0x141109 }, { grain: 0.18, scale: 40 }), dune: std(0xc9a77a, { emissive: 0x140e06 }, { grain: 0.14, scale: 30 }),
+    hill: std(0x4c5f36, { side: THREE.DoubleSide, emissive: 0x060a03 }, { grain: 0.35, scale: 28 }), grass: std(0x587a3f, { emissive: 0x060c04 }, { grain: 0.3, scale: 45 }),
+    hollow: std(0x1b1814, { roughness: 1 }, { grain: 0 }),
+    olive: std(0x6b7c50, { emissive: 0x070a04 }, { grain: 0.3, scale: 90 }), palm: std(0x4a7b37, { side: THREE.DoubleSide, emissive: 0x061004 }, { grain: 0.2 }),
+    trunk: std(0x6a5440, {}, { grain: 0.3, scale: 120 }),
+    water: std(0x2a7aa6, { roughness: 0.12, flatShading: false, envMapIntensity: 1.0 }, { grain: 0.06, scale: 20, sparkle: true }),
+    hull: std(0xf2eee6, { roughness: 0.55 }, { grain: 0.06 }), blue: std(0x2b74c9, { roughness: 0.45 }, { grain: 0.08 }), wood: std(0x6d5a47, {}, { grain: 0.3, scale: 120 }),
+    sail: std(0xf3ede0, { side: THREE.DoubleSide, roughness: 0.85 }, { grain: 0.08 }),
+    white: std(0xefebe2, { emissive: 0x201e1a }, { grain: 0.08, scale: 60 }), roof: std(0x9b4136, { emissive: 0x120504 }, { grain: 0.25, scale: 90, course: 0.008 }),
+    snow: std(0xf4f6f9, { side: THREE.DoubleSide, emissive: 0x2a2c30 }, { grain: 0.05 }),
+    road: std(0x6a645b, {}, { grain: 0.2, scale: 120 }), boatRed: std(0xb3352f, { roughness: 0.45 }, { grain: 0.08 }),
+    forest: std(0x3c5a33, { emissive: 0x050c05 }, { grain: 0.35, scale: 90 }), brick: std(0xb39270, { emissive: 0x100c07 }, { grain: 0.3, scale: 90, course: 0.006 }),
+    // windows that light up on the night map
+    lamp: new THREE.MeshStandardMaterial({ color: 0x2a2620, emissive: 0xfff0d2, emissiveIntensity: 0, roughness: 1 }),
   };
   return M;
 }
@@ -37,15 +87,23 @@ class Kit {
     const g = geo.index ? geo.toNonIndexed() : geo;
     for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
     g.clearGroups();
+    const pos = g.attributes.position; const col = new Float32Array(pos.count * 3);
+    const tint = 1 + (Math.random() - 0.5) * 0.12; const warm = (Math.random() - 0.5) * 0.04;
+    for (let i = 0; i < pos.count; i++) {
+      const ao = 0.66 + 0.34 * THREE.MathUtils.smoothstep(pos.getY(i), 0, 0.06);
+      col[i * 3] = tint * ao * (1 + warm); col[i * 3 + 1] = tint * ao; col[i * 3 + 2] = tint * ao * (1 - warm);
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     (this.parts[mat] ||= []).push(g);
     return this;
   }
   // boxes and cylinders sit on y (their base), not on their centre
   box(mat, w, h, d, x, y, z, ry = 0) { return this.put(mat, new THREE.BoxGeometry(w, h, d), { x, y: y + h / 2, z, ry }); }
   cyl(mat, rt, rb, h, x, y, z, seg = 12, ry = 0) { return this.put(mat, new THREE.CylinderGeometry(rt, rb, h, seg), { x, y: y + h / 2, z, ry }); }
-  build() {
+  // remap lets a site swap the generic stone for its own (El Jem's sandstone, Kairouan's ochre)
+  build(remap = {}) {
     const g = new THREE.Group(); const m = mats();
-    for (const [k, list] of Object.entries(this.parts)) g.add(new THREE.Mesh(mergeGeometries(list), m[k]));
+    for (const [k, list] of Object.entries(this.parts)) g.add(new THREE.Mesh(mergeGeometries(list), m[remap[k] || k]));
     return g;
   }
 }
@@ -174,7 +232,7 @@ function elJem() {
   }
   k.put('sand', ellipseSlab(0.22, 0.16, 0, 0, 0.012));
   for (let i = 0; i < 14; i++) { const a = rand() * Math.PI * 2; const d = 1.18 + rand() * 0.25; tree(k, Math.cos(a) * A * d, Math.sin(a) * B * d, 1.3); }
-  return k.build();
+  return k.build({ stone: 'sandstone', stoneDk: 'sandstoneDk' });
 }
 
 function kairouan() {
@@ -222,8 +280,8 @@ function kairouan() {
   k.put('dome', new THREE.SphereGeometry(0.03, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { y, z: mz });
   // the town's olive groves around the walls
   { const rand = rng(17); for (let i = 0; i < 16; i++) { const a = rand() * Math.PI * 2; const d = 0.62 + rand() * 0.18; tree(k, Math.cos(a) * d * 0.75, Math.sin(a) * d, 1.3); } }
-  for (const fy of [0.05, 0.1]) k.box('hollow', 0.014, 0.02, 0.004, 0, fy, mz + 0.066);
-  return k.build();
+  for (const fy of [0.05, 0.1, 0.17]) k.box('lamp', 0.014, 0.02, 0.004, 0, fy, mz + (fy > 0.15 ? 0.048 : 0.066));
+  return k.build({ stone: 'ochre', stoneDk: 'ochreDk' });
 }
 
 function dougga() {
@@ -329,91 +387,201 @@ function boat() {
   return k.build();
 }
 
+// natural ground under a site: an irregular low patch instead of a rectangular tray
+function patch(k, mat, rx, rz, x = 0, z = 0, h = 0.008, seed = 1) {
+  const r = rng(seed); const sh = new THREE.Shape(); const n = 22;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2; const f = 0.84 + r() * 0.24;
+    const px = Math.cos(a) * rx * f; const py = Math.sin(a) * rz * f;
+    if (i) sh.lineTo(px, py); else sh.moveTo(px, py);
+  }
+  sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: true, bevelThickness: h * 0.6, bevelSize: Math.min(rx, rz) * 0.08, bevelSegments: 2, curveSegments: 1 });
+  g.rotateX(-Math.PI / 2);
+  k.put(mat, g, { x, y: 0, z });
+}
+// a straight wall from (x0,z0) to (x1,z1), with merlons along the top
+function rampart(k, mat, x0, z0, x1, z1, h, t = 0.02, y = 0, crenel = 0.011) {
+  const len = Math.hypot(x1 - x0, z1 - z0); const ry = Math.atan2(-(z1 - z0), x1 - x0);
+  k.put(mat, new THREE.BoxGeometry(len, h, t), { x: (x0 + x1) / 2, y: y + h / 2, z: (z0 + z1) / 2, ry });
+  if (!crenel) return;
+  const n = Math.max(1, Math.floor(len / (crenel * 2)));
+  for (let i = 0; i < n; i++) {
+    const u = (i + 0.5) / n;
+    k.put(mat, new THREE.BoxGeometry(crenel, crenel * 1.1, t * 1.05), { x: x0 + (x1 - x0) * u, y: y + h + crenel * 0.55, z: z0 + (z1 - z0) * u, ry });
+  }
+}
+// a tall town house facing +z (before turning): floors of shuttered windows, a parapet, a lamp or two at night
+function townhouse(k, x, z, w, h, d, ry, mat, rand) {
+  const c = Math.cos(ry); const sn = Math.sin(ry);
+  k.put(mat, new THREE.BoxGeometry(w, h, d), { x, y: h / 2, z, ry });
+  k.put(mat, new THREE.BoxGeometry(w * 1.04, 0.006, d * 1.04), { x, y: h + 0.003, z, ry });
+  const floors = Math.max(1, Math.round(h / 0.03));
+  for (let f = 0; f < floors; f++) for (const u of [-0.24, 0.24]) {
+    const wy = (f + 0.55) * (h / floors);
+    const fx = u * w; const fz = d / 2 + 0.0015;
+    const lit = rand() < 0.3;
+    k.put(lit ? 'lamp' : 'blue', new THREE.BoxGeometry(w * 0.2, Math.min(0.016, h / floors * 0.5), 0.003), { x: x + c * fx + sn * fz, y: wy, z: z - sn * fx + c * fz, ry });
+  }
+}
+function minaretOct(k, mat, x, z, h, r) {
+  k.cyl(mat, r * 1.15, r * 1.25, h * 0.08, x, 0, z, 8);
+  k.cyl(mat, r, r * 1.05, h * 0.72, x, h * 0.08, z, 8);
+  k.cyl('stoneDk', r * 1.35, r * 1.35, h * 0.03, x, h * 0.8, z, 8);
+  k.cyl(mat, r * 0.62, r * 0.66, h * 0.12, x, h * 0.83, z, 8);
+  k.put('dome', new THREE.SphereGeometry(r * 0.62, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { x, y: h * 0.95, z });
+  k.cyl('stoneDk', 0.0015, 0.0015, h * 0.08, x, h * 0.95 + r * 0.55, z, 4);
+  for (const fy of [0.3, 0.55]) k.box('lamp', r * 0.5, h * 0.06, 0.003, x, h * fy, z + r * 0.98);
+}
+function boatAt(k, x, z, sc, ry, low, high) {
+  for (const [m, y0, y1] of [[low, 0, 0.075], [high, 0.075, 0.17]]) {
+    const g = hullGeo(y0, y1); g.scale(sc, sc, sc); g.rotateY(ry); k.put(m, g, { x, y: 0.02, z });
+  }
+}
+
 // a whitewashed house with blue shutters
 function house(k, x, z, w, h, d, ry = 0, y = 0) {
   k.box('white', w, h, d, x, y, z, ry);
+  if (Math.random() < 0.6) { const c = Math.cos(ry); const sn = Math.sin(ry); k.box('lamp', w * 0.18, h * 0.22, 0.003, x + sn * d * 0.5, y + h * 0.66, z + c * d * 0.5, ry); }
   const c = Math.cos(ry); const sn = Math.sin(ry);
   for (const u of [-0.25, 0.25]) k.box('blue', w * 0.16, h * 0.28, 0.004, x + c * u * w + sn * d * 0.5, y + h * 0.45, z - sn * u * w + c * d * 0.5, ry);
 }
 
 function bizerte() {
-  // the Old Port: a narrow canal lined with whitewashed houses, fishing boats along the quays,
-  // and the walls of the Kasbah guarding the mouth of the canal on the sea side
+  // the Old Port: a long canal between stone quays, lined with tall narrow houses in white, sand
+  // and ochre with blue shutters; the Kasbah guards the north side of its mouth, the small Ksiba
+  // fort the south side; the octagonal minaret of the Great Mosque rises over the west end;
+  // fishing boats painted blue, red and white along the quays
   const k = new Kit(); const rand = rng(31);
-  k.box('sand', 0.9, 0.016, 0.6, 0, 0, 0);
-  k.box('water', 0.92, 0.018, 0.12, 0, 0, 0.02);
-  for (const side of [-1, 1]) for (let i = 0; i < 8; i++) {
-    const x = -0.38 + i * 0.075; const h = 0.05 + rand() * 0.05;
-    house(k, x, 0.02 + side * 0.13, 0.065, h, 0.08, side > 0 ? Math.PI : 0, 0.016);
-  }
-  // Kasbah: crenellated walls with square towers
-  const kx = 0.36; const kz = -0.17; const kw = 0.2; const kh = 0.07;
-  for (const [x, z, w, d] of [[kx, kz - kw / 2, kw, 0.02], [kx, kz + kw / 2, kw, 0.02], [kx - kw / 2, kz, 0.02, kw], [kx + kw / 2, kz, 0.02, kw]]) {
-    k.box('stone', w, kh, d, x, 0.016, z);
-    const n = Math.round(Math.max(w, d) / 0.025);
-    for (let i = 0; i < n; i += 2) {
-      const u = -0.5 + (i + 0.5) / n;
-      k.box('stone', w > d ? 0.012 : 0.022, 0.012, w > d ? 0.022 : 0.012, x + (w > d ? u * w : 0), 0.016 + kh, z + (w > d ? 0 : u * d));
+  patch(k, 'sand', 0.5, 0.34, -0.02, 0, 0.012, 3);
+  k.box('water', 1.0, 0.02, 0.17, 0.04, 0.003, 0.02);
+  for (const sz of [-1, 1]) k.box('stoneDk', 0.86, 0.028, 0.018, -0.02, 0, 0.02 + sz * 0.094);
+  const mats = ['white', 'white', 'white', 'sand', 'stone', 'white', 'sand', 'white'];
+  for (const side of [-1, 1]) {
+    let x = -0.36;
+    while (x < 0.2) {
+      const w = 0.045 + rand() * 0.03; const h = side > 0 ? 0.03 + rand() * 0.025 : 0.06 + rand() * 0.07;
+      townhouse(k, x + w / 2, 0.02 + side * (0.103 + 0.038), w, h, 0.075, side > 0 ? Math.PI : 0, mats[Math.floor(rand() * mats.length)], rand);
+      x += w + 0.004;
     }
   }
-  for (const [x, z] of [[kx - kw / 2, kz - kw / 2], [kx + kw / 2, kz - kw / 2], [kx - kw / 2, kz + kw / 2], [kx + kw / 2, kz + kw / 2]]) k.box('stoneDk', 0.045, kh + 0.025, 0.045, x, 0.016, z);
-  // boats moored in the canal
-  for (const [x, z, sc, ry] of [[-0.2, 0.0, 0.11, 0.05], [0.0, 0.05, 0.1, -0.04], [0.16, -0.005, 0.09, 0.02]]) {
-    for (const [mat, y0, y1] of [['blue', 0, 0.075], ['hull', 0.075, 0.17]]) {
-      const g = hullGeo(y0, y1); g.scale(sc, sc, sc); g.rotateY(ry);
-      k.put(mat, g, { x, y: 0.014, z });
-    }
+  // Kasbah, north of the mouth
+  const kx = 0.33; const kz = -0.17; const kw = 0.19; const kh = 0.07;
+  rampart(k, 'stone', kx - kw / 2, kz - kw / 2, kx + kw / 2, kz - kw / 2, kh);
+  rampart(k, 'stone', kx - kw / 2, kz + kw / 2, kx + kw / 2, kz + kw / 2, kh);
+  rampart(k, 'stone', kx - kw / 2, kz - kw / 2, kx - kw / 2, kz + kw / 2, kh);
+  rampart(k, 'stone', kx + kw / 2, kz - kw / 2, kx + kw / 2, kz + kw / 2, kh);
+  for (const [x, z] of [[kx - kw / 2, kz - kw / 2], [kx + kw / 2, kz - kw / 2], [kx - kw / 2, kz + kw / 2], [kx + kw / 2, kz + kw / 2]]) {
+    k.box('stoneDk', 0.045, kh + 0.022, 0.045, x, 0, z);
+    rampart(k, 'stoneDk', x - 0.022, z + 0.022, x + 0.022, z + 0.022, 0.001, 0.006, kh + 0.022, 0.008);
   }
-  return k.build();
+  k.put('hollow', archGeo(0.04, 0.05, 0.022, 0.026, 0.026, 0), { x: kx - 0.04, y: 0, z: kz + kw / 2 + 0.001 });
+  for (let i = 0; i < 6; i++) k.box('white', 0.03, 0.025 + rand() * 0.02, 0.03, kx - 0.06 + (i % 3) * 0.05, 0, kz - 0.05 + Math.floor(i / 3) * 0.06);
+  // Ksiba, south of the mouth
+  const qx = 0.32; const qz = 0.2; const qw = 0.1;
+  rampart(k, 'stone', qx - qw / 2, qz - qw / 2, qx + qw / 2, qz - qw / 2, 0.05);
+  rampart(k, 'stone', qx - qw / 2, qz + qw / 2, qx + qw / 2, qz + qw / 2, 0.05);
+  rampart(k, 'stone', qx - qw / 2, qz - qw / 2, qx - qw / 2, qz + qw / 2, 0.05);
+  rampart(k, 'stone', qx + qw / 2, qz - qw / 2, qx + qw / 2, qz + qw / 2, 0.05);
+  // the Great Mosque's octagonal minaret
+  minaretOct(k, 'stone', -0.3, -0.21, 0.19, 0.02);
+  k.box('white', 0.1, 0.045, 0.07, -0.22, 0, -0.21);
+  k.put('dome', new THREE.SphereGeometry(0.025, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { x: -0.22, y: 0.045, z: -0.21 });
+  // boats along the quays
+  const hulls = [['blue', 'hull'], ['boatRed', 'hull'], ['blue', 'hull'], ['hull', 'blue'], ['boatRed', 'hull']];
+  hulls.forEach(([lo, hi], i) => boatAt(k, -0.3 + i * 0.12, 0.02 + (i % 2 ? 0.05 : -0.05), 0.09, (rand() - 0.5) * 0.1, lo, hi));
+  return k.build({ stone: 'ochre', stoneDk: 'ochreDk' });
 }
 
 function aindraham() {
-  // a mountain town of the Kroumirie: red-roofed houses on a hill in cork oak forest,
-  // white when winter snow falls (it is one of the few places in Tunisia where it does)
+  // a mountain town of the Kroumirie: stone houses with red tile roofs and chimneys on a hill of
+  // cork oak, a road winding up, and the snow that falls here in winter on the treetops and slopes
   const k = new Kit(); const rand = rng(41);
-  const prof = [[0, 0.22], [0.12, 0.21], [0.3, 0.13], [0.45, 0.05], [0.55, 0]];
+  const prof = [[0, 0.2], [0.14, 0.19], [0.3, 0.12], [0.45, 0.045], [0.56, 0]];
   const hAt = (d) => { for (let i = 1; i < prof.length; i++) if (d <= prof[i][0]) { const [r0, y0] = prof[i - 1]; const [r1, y1] = prof[i]; return y0 + ((d - r0) / (r1 - r0)) * (y1 - y0); } return 0; };
-  mound(k, 'hill', prof, 22);
-  mound(k, 'snow', [[0, 0.226], [0.1, 0.217], [0.17, 0.19], [0.2, 0.17]], 22);
-  for (let i = 0; i < 70; i++) {
-    const a = rand() * Math.PI * 2; const d = 0.2 + rand() * 0.34;
-    const y = hAt(d) - 0.004;
-    k.cyl('trunk', 0.004, 0.006, 0.02, Math.cos(a) * d, y, Math.sin(a) * d, 5);
-    k.put('forest', new THREE.IcosahedronGeometry(0.026 + rand() * 0.012, 0), { x: Math.cos(a) * d, y: y + 0.035, z: Math.sin(a) * d });
+  mound(k, 'hill', prof, 26);
+  // the road: a ribbon spiralling up the slope
+  const road = [];
+  for (let t = 0; t <= 1; t += 1 / 60) {
+    const a = 0.6 + t * 5.2; const d = 0.5 - t * 0.38;
+    road.push([Math.cos(a) * d, hAt(d) + 0.003, Math.sin(a) * d]);
   }
-  // houses with pitched tile roofs on the south slope
-  for (let i = 0; i < 7; i++) {
-    const a = Math.PI * 0.25 + i * 0.22 + rand() * 0.1; const d = 0.16 + rand() * 0.1;
-    const x = Math.cos(a) * d; const z = Math.sin(a) * d; const y = hAt(d + 0.03);
-    const w = 0.05; const h = 0.035; const dd = 0.04; const ry = -a + Math.PI / 2;
-    k.box('white', w, h, dd, x, y - 0.01, z, ry);
-    const rs = new THREE.Shape(); rs.moveTo(-w / 2 - 0.006, 0); rs.lineTo(w / 2 + 0.006, 0); rs.lineTo(0, 0.026); rs.closePath();
-    const rg = new THREE.ExtrudeGeometry(rs, { depth: dd + 0.01, bevelEnabled: false }); rg.translate(0, 0, -(dd + 0.01) / 2);
-    k.put('roof', rg, { x, y: y - 0.01 + h, z, ry });
+  for (let i = 0; i < road.length - 1; i++) {
+    const [x0, y0, z0] = road[i]; const [x1, y1, z1] = road[i + 1];
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    k.put('road', new THREE.BoxGeometry(len * 1.05, 0.003, 0.018), { x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: (z0 + z1) / 2, ry: Math.atan2(-(z1 - z0), x1 - x0) });
+  }
+  // cork oak forest, with snow on some crowns and patches on the ground
+  for (let i = 0; i < 160; i++) {
+    const a = rand() * Math.PI * 2; const d = 0.16 + rand() * 0.38;
+    const x = Math.cos(a) * d; const z = Math.sin(a) * d;
+    if (z > 0.02 && Math.abs(x) < 0.17 && d < 0.3) continue; // the town's clearing on the south slope
+    const y = hAt(d) - 0.004; const r = 0.022 + rand() * 0.014;
+    k.cyl('trunk', 0.003, 0.005, 0.018, x, y, z, 5);
+    k.put(rand() < 0.7 ? 'forest' : 'olive', new THREE.IcosahedronGeometry(r, 0), { x, y: y + 0.03, z });
+    if (rand() < 0.45) { const sc = new THREE.IcosahedronGeometry(r * 0.75, 0); sc.scale(1, 0.45, 1); k.put('snow', sc, { x, y: y + 0.03 + r * 0.6, z }); }
+  }
+  for (let i = 0; i < 16; i++) {
+    const a = rand() * Math.PI * 2; const d = 0.08 + rand() * 0.3;
+    const g = new THREE.CircleGeometry(0.03 + rand() * 0.03, 7); g.rotateX(-Math.PI / 2); g.scale(1, 1, 0.6 + rand() * 0.5);
+    k.put('snow', g, { x: Math.cos(a) * d, y: hAt(d) + 0.002, z: Math.sin(a) * d });
+  }
+  // the town: stone houses with hipped red roofs and chimneys
+  for (let i = 0; i < 11; i++) {
+    const x = -0.14 + (i % 4) * 0.085 + (rand() - 0.5) * 0.03; const z = 0.06 + Math.floor(i / 4) * 0.075 + (rand() - 0.5) * 0.02;
+    const d = Math.hypot(x, z); const y = hAt(d) - 0.006; const ry = (rand() - 0.5) * 0.5;
+    const w = 0.045 + rand() * 0.02; const dd = 0.035 + rand() * 0.012; const h = 0.028 + rand() * 0.012;
+    k.put(rand() < 0.5 ? 'stone' : 'white', new THREE.BoxGeometry(w, h, dd), { x, y: y + h / 2, z, ry });
+    const roof = new THREE.ConeGeometry(Math.hypot(w, dd) * 0.56, 0.026, 4); roof.rotateY(Math.PI / 4); roof.scale(w / Math.hypot(w, dd) * 1.42, 1, dd / Math.hypot(w, dd) * 1.42);
+    k.put('roof', roof, { x, y: y + h + 0.013, z, ry });
+    k.put('stoneDk', new THREE.BoxGeometry(0.007, 0.016, 0.007), { x: x + w * 0.25, y: y + h + 0.018, z: z - dd * 0.2, ry });
+    k.put('lamp', new THREE.BoxGeometry(w * 0.22, h * 0.3, 0.003), { x: x + Math.sin(ry) * (dd / 2 + 0.002), y: y + h * 0.5, z: z + Math.cos(ry) * (dd / 2 + 0.002), ry });
   }
   return k.build();
 }
 
 function hammamet() {
-  // the walled medina on the shore: ramparts with towers, whitewashed houses inside,
-  // the square minaret of the Great Mosque, and the beach in front
+  // the medina on the shore: ochre ramparts with merlons and square towers, the kasbah in the
+  // north-west corner, an arched gate, white houses with small domes and blue doors inside, the
+  // square minaret of the Great Mosque, and the beach in front with palms and parasols
   const k = new Kit(); const rand = rng(53);
-  k.box('dune', 0.74, 0.012, 0.1, 0, 0, 0.2);
-  k.box('sand', 0.74, 0.016, 0.42, 0, 0, -0.06);
-  const W = 0.46; const D = 0.34; const wh = 0.07; const cz = -0.06;
-  for (const [x, z, w, d] of [[0, cz - D / 2, W, 0.022], [0, cz + D / 2, W, 0.022], [-W / 2, cz, 0.022, D], [W / 2, cz, 0.022, D]]) k.box('stone', w, wh, d, x, 0.016, z);
-  for (const [x, z] of [[-W / 2, cz - D / 2], [W / 2, cz - D / 2], [-W / 2, cz + D / 2], [W / 2, cz + D / 2]]) k.cyl('stoneDk', 0.032, 0.036, wh + 0.03, x, 0.016, z, 10);
-  // the kasbah in the north-west corner
-  k.box('stoneDk', 0.12, wh + 0.04, 0.1, -W / 2 + 0.07, 0.016, cz - D / 2 + 0.06);
-  for (let i = 0; i < 26; i++) {
-    const x = -W / 2 + 0.05 + rand() * (W - 0.1); const z = cz - D / 2 + 0.05 + rand() * (D - 0.1);
+  patch(k, 'sand', 0.44, 0.3, 0, -0.06, 0.012, 9);
+  patch(k, 'dune', 0.46, 0.09, 0, 0.21, 0.008, 12);
+  const W = 0.44; const D = 0.3; const wh = 0.075; const cz = -0.07;
+  const c = [[-W / 2, cz - D / 2], [W / 2, cz - D / 2], [W / 2, cz + D / 2], [-W / 2, cz + D / 2]];
+  for (let i = 0; i < 4; i++) rampart(k, 'stone', c[i][0], c[i][1], c[(i + 1) % 4][0], c[(i + 1) % 4][1], wh, 0.022);
+  for (const [x, z] of c) { k.box('stoneDk', 0.05, wh + 0.03, 0.05, x, 0, z); rampart(k, 'stoneDk', x - 0.025, z + 0.025, x + 0.025, z + 0.025, 0.001, 0.006, wh + 0.03, 0.009); }
+  // kasbah
+  k.box('stoneDk', 0.12, wh + 0.045, 0.1, -W / 2 + 0.07, 0, cz - D / 2 + 0.06);
+  rampart(k, 'stoneDk', -W / 2 + 0.01, cz - D / 2 + 0.11, -W / 2 + 0.13, cz - D / 2 + 0.11, 0.001, 0.006, wh + 0.045, 0.01);
+  // the sea gate
+  k.put('hollow', archGeo(0.05, 0.06, 0.024, 0.032, 0.032, 0), { x: 0.06, y: 0, z: cz + D / 2 + 0.001 });
+  // medina houses
+  for (let i = 0; i < 34; i++) {
+    const x = -W / 2 + 0.04 + rand() * (W - 0.08); const z = cz - D / 2 + 0.04 + rand() * (D - 0.08);
     if (x < -W / 2 + 0.14 && z < cz - D / 2 + 0.13) continue;
-    k.box('white', 0.035 + rand() * 0.03, 0.025 + rand() * 0.035, 0.035 + rand() * 0.03, x, 0.016, z, rand() * 0.2);
+    if (Math.abs(x + 0.05) < 0.04 && Math.abs(z - cz) < 0.05) continue; // the mosque
+    const hw = 0.028 + rand() * 0.026; const hh = 0.022 + rand() * 0.03; const hd = 0.028 + rand() * 0.026;
+    k.box('white', hw, hh, hd, x, 0.012, z, 0);
+    if (rand() < 0.25) k.put('dome', new THREE.SphereGeometry(Math.min(hw, hd) * 0.4, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2), { x, y: 0.012 + hh, z });
+    if (rand() < 0.5) k.box(rand() < 0.5 ? 'blue' : 'lamp', hw * 0.24, hh * 0.45, 0.003, x, 0.012, z + hd / 2 + 0.0015);
   }
-  k.cyl('white', 0.024, 0.026, 0.12, 0.06, 0.016, cz + 0.02, 4, Math.PI / 4);
-  k.put('white', new THREE.SphereGeometry(0.04, 14, 5, 0, Math.PI * 2, 0, Math.PI / 2), { x: 0.13, y: 0.06, z: cz + 0.03 });
-  k.box('white', 0.09, 0.044, 0.08, 0.13, 0.016, cz + 0.03);
-  return k.build();
+  // the Great Mosque and its square minaret
+  k.box('white', 0.08, 0.035, 0.07, -0.05, 0.012, cz);
+  k.put('dome', new THREE.SphereGeometry(0.026, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2), { x: -0.05, y: 0.047, z: cz });
+  k.box('white', 0.03, 0.13, 0.03, -0.1, 0.012, cz - 0.03);
+  k.box('stoneDk', 0.038, 0.006, 0.038, -0.1, 0.142, cz - 0.03);
+  k.box('white', 0.018, 0.022, 0.018, -0.1, 0.148, cz - 0.03);
+  k.put('dome', new THREE.SphereGeometry(0.01, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2), { x: -0.1, y: 0.17, z: cz - 0.03 });
+  k.box('lamp', 0.01, 0.018, 0.003, -0.1, 0.09, cz - 0.014);
+  // palms between the ramparts and the beach, parasols on the sand
+  for (let i = 0; i < 7; i++) palm(k, -0.38 + i * 0.125 + (rand() - 0.5) * 0.03, 0.13 + rand() * 0.03, 1.5, 0.01);
+  for (let i = 0; i < 9; i++) {
+    const x = -0.36 + i * 0.09 + (rand() - 0.5) * 0.02; const z = 0.22 + (rand() - 0.5) * 0.04;
+    k.cyl('trunk', 0.0015, 0.0015, 0.03, x, 0.008, z, 4);
+    k.put(i % 2 ? 'blue' : 'white', new THREE.ConeGeometry(0.02, 0.008, 8), { x, y: 0.042, z });
+  }
+  return k.build({ stone: 'ochre', stoneDk: 'ochreDk' });
 }
 
 function tozeur() {
@@ -565,8 +733,25 @@ const SITES = [
   { key: 'epidaurus', lon: 23.0794, lat: 37.5961, make: epidaurus, s: 0.17, ry: 0, leg: 'gr', d: 0.25, label: true },
 ];
 
+function gullGeo() {
+  // a gull seen from above: two swept wings meeting at the body
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0.004, -0.5, 0, -0.12, -0.18, 0, -0.03, 0, 0, 0.004, 0.18, 0, -0.03, 0.5, 0, -0.12, 0, 0, 0.004, -0.18, 0, -0.03, 0, 0, -0.05, 0, 0, 0.004, 0, 0, -0.05, 0.18, 0, -0.03], 3));
+  g.computeVertexNormals();
+  return g;
+}
+
 export function buildLandmarks(project, landH, stops = []) {
   const group = new THREE.Group();
+  const gulls = [];
+  const gullMat = new THREE.MeshBasicMaterial({ color: 0xf4f1ea, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+  const gGeo = gullGeo();
+  for (let i = 0; i < 7; i++) {
+    const m = new THREE.Mesh(gGeo, gullMat); m.scale.setScalar(0.05 + Math.random() * 0.015);
+    m.userData = { r: 0.12 + Math.random() * 0.1, h: 0.12 + Math.random() * 0.08, sp: 0.35 + Math.random() * 0.25, ph: Math.random() * 6.28, fl: 5 + Math.random() * 3 };
+    group.add(m); gulls.push(m);
+  }
+  const gullAt = new THREE.Vector3(); let gullFade = 0;
   const items = SITES.map((site) => {
     const pos = project(site.lon, site.lat);
     const holder = new THREE.Group(); holder.position.set(pos.x + (site.dx || 0), site.sea ? 0.004 : landH, pos.z + (site.dz || 0));
@@ -577,7 +762,23 @@ export function buildLandmarks(project, landH, stops = []) {
     return { ...site, holder, model, sh, pos: holder.position, bob: Math.random() * 6, stop: stops.indexOf(site.key) };
   });
   const ease = (x) => { const c = 1.4; return 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2; }; // easeOutBack
-  function update(time, { tn, gr, reduced, cam, hop = -9, tour = 0 }) {
+  function update(time, { tn, gr, reduced, cam, hop = -9, tour = 0, night = 0 }) {
+    SHARED.uTime.value = reduced ? 0 : time;
+    mats().lamp.emissiveIntensity = 1.8 * night;
+    // gulls follow the stop the tour is on
+    const stopIt = items.find((it) => it.stop === Math.round(hop) && it.leg === 'tn');
+    const want = stopIt && tour > 0.5 && !reduced ? 1 : 0;
+    gullFade += (want - gullFade) * 0.05;
+    gullMat.opacity = gullFade * 0.95;
+    if (stopIt) gullAt.lerp(stopIt.pos, gullFade < 0.05 ? 1 : 0.05);
+    for (const g of gulls) {
+      g.visible = gullFade > 0.01;
+      if (!g.visible) continue;
+      const u = g.userData; const a = u.ph + time * u.sp;
+      g.position.set(gullAt.x + Math.cos(a) * u.r, gullAt.y + u.h + Math.sin(time * 0.7 + u.ph) * 0.01, gullAt.z + Math.sin(a) * u.r);
+      g.rotation.set(0, -a, 0);
+      g.scale.y = 1; g.rotation.z = Math.sin(time * u.fl + u.ph) * 0.45;
+    }
     for (const it of items) {
       const lead = it.leg === 'tn' ? tn : gr;
       const r = THREE.MathUtils.smoothstep(lead, it.d, it.d + 0.55);

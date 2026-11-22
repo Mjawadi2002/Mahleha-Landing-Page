@@ -398,6 +398,10 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     return { it, el };
   });
   for (const it of lm.items) if (markers[it.key]) markers[it.key].site = it;
+  // compile every landmark shader now, so nothing stalls the first time a model rises
+  lm.items.forEach((it) => { it.holder.visible = true; });
+  try { renderer.compile(scene, camera); } catch { /* compile is an optimisation only */ }
+  lm.items.forEach((it) => { it.holder.visible = false; });
   const acro = lm.items.find((it) => it.key === 'parthenon');
   const acroPos = new THREE.Vector3(); const acroLook = new THREE.Vector3();
   let homeK = 0;
@@ -486,6 +490,8 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
   window.addEventListener('resize', resize);
 
   const clock = new THREE.Clock();
+  const maxDpr = Math.min(window.devicePixelRatio, lite ? 1.25 : 2); const minDpr = Math.min(maxDpr, 0.75);
+  let frameAvg = 16; let lastAdapt = 0; let lastT2 = 0;
   let running = true;
 
   function frame() {
@@ -586,7 +592,7 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     }
 
     // landmarks rise on their leg of the trip
-    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced, cam: camera.position, hop: state.hop, tour: state.tour });
+    lm.update(time, { tn: THREE.MathUtils.smoothstep(t, 0.72, 0.97), gr: themeK, reduced, cam: camera.position, hop: state.hop, tour: state.tour, night: 1 - themeK });
     for (const { it, el } of lmLabels) {
       const sp = it.pos.clone(); sp.y += it.s * 0.3; sp.project(camera);
       const vis = (it.rise || 0) * (1 - THREE.MathUtils.smoothstep(t, 0.15, 0.27)) * (sp.z < 1 && Math.abs(sp.x) < 1.05 && Math.abs(sp.y) < 1.05 ? 1 : 0);
@@ -652,7 +658,19 @@ export function createFlight(canvas, labelLayer, { reduced = false, lite = false
     seaMat.uniforms.uTime.value = reduced ? 0 : time;
 
     dotMat.uniforms.uTime.value = time;
-    renderer.render(scene, camera);
+    // the cabin covers the whole screen once open: nothing to draw underneath
+    if ((state.cabin || 0) < 0.995) renderer.render(scene, camera);
+    // adaptive resolution: trade pixels for frames on slower devices, give them back when there is headroom
+    const dtMs = (time - lastT2) * 1000; lastT2 = time;
+    if (dtMs > 0 && dtMs < 250) { frameAvg += (dtMs - frameAvg) * 0.05; }
+    if (time - lastAdapt > 2.5) {
+      lastAdapt = time;
+      const cur = renderer.getPixelRatio();
+      let next = cur;
+      if (frameAvg > 24 && cur > minDpr) next = Math.max(minDpr, cur - 0.2);
+      else if (frameAvg < 15 && cur < maxDpr) next = Math.min(maxDpr, cur + 0.1);
+      if (next !== cur) { renderer.setPixelRatio(next); renderer.setSize(sizedW, sizedH, false); dotMat.uniforms.uPx.value = next; }
+    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

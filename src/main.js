@@ -378,9 +378,19 @@ function runGallery() {
 }
 galleries[0]?.go(0);
 runGallery();
+// warm the first two stops once the tour is near
+ScrollTrigger.create({ trigger: '#tour', start: 'top 250%', once: true, onEnter: () => { warmStop(0); warmStop(1); } });
+// decode the next stop's photos ahead of time, off the main thread, so the switch never stutters
+$$('.tour-stop img, .gift img').forEach((img) => { img.decoding = 'async'; });
+function warmStop(k) {
+  const st = tourStops[k]; if (!st || st.dataset.warm) return;
+  st.dataset.warm = '1';
+  $$('img', st).forEach((img) => { img.loading = 'eager'; img.decode?.().catch(() => {}); });
+}
 function showStop(i) {
   if (i === tourOn) return;
   tourOn = i;
+  warmStop(i); warmStop(i + 1); warmStop(i - 1);
   tourStops.forEach((s, k) => { s.classList.toggle('is-on', k === i); s.inert = k !== i; });
   galleries[i]?.go(0); runGallery();
   $$('.tour-ghost > span').forEach((g, k) => g.classList.toggle('is-on', k === i));
@@ -445,9 +455,21 @@ armCue();
 
 // ---------- leaving Tunisia: scrolling back up turns the arrivals board into a farewell ----------
 let leaving = false;
+// the live 3D cabin loads the first time the visitor heads home
+let cabin3d = null; let cabinLoading = false;
+function loadCabin() {
+  if (cabin3d || cabinLoading) return;
+  cabinLoading = true;
+  import('./cabin3d.js').then((m) => {
+    cabin3d = m.createCabin($('.cabin-gl'), { lite, reduced });
+    document.documentElement.classList.add('cabin-gl-on');
+    updateCabin();
+  }).catch((err) => { console.warn('3D cabin unavailable, using the drawn one:', err); });
+}
 function setLeaving(on) {
   if (on === leaving) return;
   leaving = on;
+  if (on) loadCabin();
   document.documentElement.classList.toggle('leaving', on);
   if (flight) flight.state.theme = on ? 1 : 0;
   if (!on) { document.documentElement.classList.remove('in-cabin'); if (flight) flight.state.cabin = 0; }
@@ -518,11 +540,12 @@ function updateCabin() {
   $('.cabin').style.visibility = vis > 0.002 ? 'visible' : 'hidden';
   // the window frame belongs to the moment of entering only
   $('.cabin-porthole').style.visibility = vis > 0.002 && vis < 0.6 ? 'visible' : 'hidden';
-  if (!leaving) return;
+  if (!leaving) { cabin3d?.update(0, 0); return; }
   // scrolling up through the section plays the unpacking forward
   const p = Math.min(1, Math.max(0, -r.top / Math.max(1, sec.offsetHeight - innerHeight)));
   const tp = reduced ? 1 : 1 - p;
   cabinTl.progress(tp);
+  cabin3d?.update(vis, tp);
   const shown = Math.max(0, Math.min(gifts.length, Math.floor((tp * cabinTl.duration() - 0.7) / 1.1) + 1));
   $('.gc-n').textContent = String(shown);
 }
