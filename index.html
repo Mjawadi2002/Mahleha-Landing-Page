@@ -11,6 +11,8 @@
   <meta property="og:image" content="img/sidi-bou-said.webp" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="alternate" hreflang="el" href="#el" />
+  <link rel="alternate" hreflang="fr" href="#fr" />
+  <link rel="alternate" hreflang="ar" href="#ar" />
   <link rel="preload" as="image" href="img/athens.webp" />
 </head>
 <body>
@@ -46,6 +48,8 @@
       <div class="lang" role="group" aria-label="Language">
         <button type="button" id="lang-en" data-lang="en" aria-pressed="true" lang="en">EN</button>
         <button type="button" id="lang-el" data-lang="el" aria-pressed="false" lang="el">ΕΛ</button>
+        <button type="button" id="lang-fr" data-lang="fr" aria-pressed="false" lang="fr">FR</button>
+        <button type="button" id="lang-ar" data-lang="ar" aria-pressed="false" lang="ar">ع</button>
       </div>
       <a class="btn btn-sm" href="#board" data-i18n="cta.partner">Become a partner</a>
       <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu" data-i18n-aria="nav.menu" aria-label="Menu"><i class="ph ph-list"></i></button>
@@ -599,7 +603,7 @@
             </div>
           </div>
           <div class="pass-stub">
-            <div><small>Email</small>
+            <div><small data-i18n="form.email">Email</small>
             <span class="mail sel">dhiamaraouch4@gmail.com</span></div>
             <span class="barcode" aria-hidden="true"></span>
             <a class="btn btn-sm stub-cta" href="#enquiry"><span data-i18n="form.title">Request a presentation</span> <i class="ph ph-arrow-down"></i></a>

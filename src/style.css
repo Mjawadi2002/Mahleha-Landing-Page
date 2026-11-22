@@ -589,7 +589,7 @@ h1, h2, h3 { text-wrap: balance; }
 }
 
 /* ---------- form: sent state + honeypot ---------- */
-.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.hp { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); opacity: 0; pointer-events: none; }
 .enquiry { position: relative; }
 .sent { margin-top: 22px; padding: 16px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: flex-start; background: color-mix(in srgb, var(--sea) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sea-soft) 30%, transparent); animation: rise .6s var(--ease) both; }
 .sent .ph { color: #8fd3a8; font-size: 22px; flex: none; margin-top: 1px; }
@@ -1055,3 +1055,33 @@ h1, h2, h3 { text-wrap: balance; }
   box-shadow: 0 0 0 10px #2a2f38, 0 0 0 26px #efe9de, 0 0 0 30px #c9c0b1, 0 0 0 34px rgba(0, 0, 0, .12), 0 30px 60px 20px rgba(0, 0, 0, .25), inset 0 0 40px rgba(0, 0, 0, .35);
   opacity: min(clamp(0, calc(var(--cv) * 25), 1), clamp(0, calc((0.6 - var(--cv)) * 3), 1)); }
 @media (max-width: 760px) { .cabin-porthole { box-shadow: 0 0 0 6px #2a2f38, 0 0 0 16px #efe9de, 0 0 0 19px #c9c0b1, 0 20px 40px 10px rgba(0, 0, 0, .25), inset 0 0 30px rgba(0, 0, 0, .35); } }
+
+/* ---------- Arabic: Noto Sans / Naskh Arabic, no letter-spacing (it breaks joined letters), no faux italics, right to left ---------- */
+:lang(ar) body, html:lang(ar) { --sans: 'Noto Sans Arabic', 'DM Sans', 'Segoe UI', Tahoma, sans-serif; --serif: 'Noto Naskh Arabic', 'Lora', 'Segoe UI', serif; }
+html:lang(ar) body { font-family: var(--sans); }
+html:lang(ar) *, html:lang(ar) *::before, html:lang(ar) *::after { letter-spacing: 0 !important; }
+html:lang(ar) em, html:lang(ar) i:not([class*="ph"]), html:lang(ar) .tour-hook, html:lang(ar) .fq, html:lang(ar) .story-hook,
+html:lang(ar) .cabin-copy h2, html:lang(ar) .fw-title, html:lang(ar) .gift figcaption b, html:lang(ar) .leaving .name-tn span,
+html:lang(ar) .dl-a, html:lang(ar) .dl-b, html:lang(ar) .dl-c, html:lang(ar) .bye-toast em, html:lang(ar) .tour-ghost { font-style: normal; }
+html:lang(ar) .display, html:lang(ar) .display-xl, html:lang(ar) .h2, html:lang(ar) h1, html:lang(ar) h2, html:lang(ar) h3 { line-height: 1.3; }
+html:lang(ar) [class*="kicker"], html:lang(ar) .tour-meta, html:lang(ar) .panel li span, html:lang(ar) .tag { text-transform: none; }
+/* the brand name, numbers, codes and the boarding pass keep their own direction */
+html[dir=rtl] .brand, html[dir=rtl] .hud, html[dir=rtl] .flap, html[dir=rtl] .bag-tag, html[dir=rtl] .tp-count, html[dir=rtl] .lang { direction: ltr; }
+html[dir=rtl] .map-label { text-align: right; }
+html[dir=rtl] .tour-index ol, html[dir=rtl] .tour-copy, html[dir=rtl] .enquiry, html[dir=rtl] .foot { text-align: right; }
+html[dir=rtl] .gift figcaption { text-align: right; }
+html[dir=rtl] .ph-arrow-right, html[dir=rtl] .ph-arrow-up-right { transform: scaleX(-1); }
+:lang(fr) .lang button, :lang(ar) .lang button { letter-spacing: .02em; }
+@media (max-width: 420px) { .lang button { padding: 6px 7px; font-size: 12px; } }
+/* positioned by script from the left edge: keep them out of the right-to-left flow */
+html[dir=rtl] #labels, html[dir=rtl] .map-label { direction: ltr; left: 0; right: auto; }
+html[dir=rtl] .map-label { text-align: left; }
+html[dir=rtl] .map-label strong, html[dir=rtl] .map-label span { direction: rtl; unicode-bidi: plaintext; }
+html[dir=rtl] .skip:not(:focus) { left: auto; right: 16px; clip-path: inset(50%); width: 1px; height: 1px; padding: 0; overflow: hidden; white-space: nowrap; }
+html[dir=rtl] body { overflow-x: clip; }
+html[dir=rtl] .skip:focus { left: auto; right: 16px; }
+html[dir=rtl] .split-chars, html[dir=rtl] .foot-word, html[dir=rtl] .pass-code, html[dir=rtl] .bt-route { direction: ltr; }
+/* phone numbers and addresses read left to right inside Arabic text */
+html[dir=rtl] a[href^="tel:"], html[dir=rtl] a[href^="mailto:"], html[dir=rtl] .pass [dir], html[dir=rtl] input[type=email] { direction: ltr; unicode-bidi: isolate; }
+html[dir=rtl] .pass .ph-airplane-tilt, html[dir=rtl] .pass .ph-airplane, html[dir=rtl] .pass .ph-airplane-in-flight, html[dir=rtl] .bye-toast .ph-airplane-tilt { transform: scaleX(-1); }
+html[dir=rtl] .foot-route .ph { transform: scaleX(-1); }

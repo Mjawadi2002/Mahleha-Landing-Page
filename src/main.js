@@ -13,7 +13,14 @@ import '@fontsource/literata/greek-600.css';
 import '@fontsource/commissioner/greek-400.css';
 import '@fontsource/commissioner/greek-500.css';
 import '@fontsource/commissioner/greek-600.css';
+import '@fontsource/noto-naskh-arabic/arabic-500.css';
 import '@fontsource/noto-naskh-arabic/arabic-600.css';
+import '@fontsource/noto-sans-arabic/arabic-400.css';
+import '@fontsource/noto-sans-arabic/arabic-500.css';
+import '@fontsource/noto-sans-arabic/arabic-600.css';
+import '@fontsource/dm-sans/latin-ext-400.css';
+import '@fontsource/lora/latin-ext-400.css';
+import '@fontsource/lora/latin-ext-600.css';
 import '@phosphor-icons/web/regular';
 import './style.css';
 
@@ -21,6 +28,16 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { EL, PLACE_LABELS, CREDIT_NAMES } from './i18n.js';
+import { FR, FR_PLACES, FR_CREDITS } from './i18n-fr.js';
+import { AR, AR_PLACES, AR_CREDITS } from './i18n-ar.js';
+
+// four languages: English lives in the markup, the others in dictionaries
+const LANGS = ['en', 'el', 'fr', 'ar'];
+const DICT = { el: EL, fr: FR, ar: AR };
+const PLACES_BY_LANG = { ...PLACE_LABELS, fr: FR_PLACES, ar: AR_PLACES };
+const CREDITS_BY_LANG = { en: CREDIT_NAMES.en, el: CREDIT_NAMES.el, fr: FR_CREDITS, ar: AR_CREDITS };
+const BY = { ...CREDIT_NAMES.by, fr: 'par', ar: 'تصوير' };
+const LOCALE = { en: 'en-US', el: 'el-GR', fr: 'fr-FR', ar: 'ar-TN' };
 import { TOUR, TUN, haversineKm } from './places.js';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -54,10 +71,12 @@ function captureEnglish() {
   ENGLISH['form.rate'] = 'Too many requests from this connection. Please try again in a few minutes.';
 }
 function initialLang() {
-  if (location.hash === '#el') return 'el';
-  if (location.hash === '#en') return 'en';
-  try { const saved = localStorage.getItem('mahleha-lang'); if (saved === 'el' || saved === 'en') return saved; } catch { /* no storage */ }
-  return (navigator.languages || [navigator.language]).some((l) => /^el\b/i.test(l)) ? 'el' : 'en';
+  const h = location.hash.slice(1);
+  if (LANGS.includes(h)) return h;
+  try { const saved = localStorage.getItem('mahleha-lang'); if (LANGS.includes(saved)) return saved; } catch { /* no storage */ }
+  // the visitor's first browser language that the page speaks
+  for (const l of navigator.languages || [navigator.language]) { const code = String(l).slice(0, 2).toLowerCase(); if (LANGS.includes(code)) return code; }
+  return 'en';
 }
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (s, r = document) => r.querySelector(s);
@@ -132,7 +151,8 @@ function framed(key) {
   // put the place in the middle of the open map between the index and the card
   const idx = $('.tour-index').getBoundingClientRect();
   const card = $('.tour-cards').getBoundingClientRect();
-  const target = (idx.right + card.left) / 2;
+  const [a, b] = idx.left < card.left ? [idx, card] : [card, idx];
+  const target = (a.right + b.left) / 2;
   const dist = k.ovHeight * Math.hypot(1, k.ovTilt);
   const unitsPerPx = (2 * dist * Math.tan((42 * Math.PI) / 360)) / innerHeight;
   return { ...k, focusLon: k.focusLon + ((innerWidth / 2 - target) * unitsPerPx) / 0.8 };
@@ -380,7 +400,7 @@ function renderTourKm() {
   $$('[data-km]').forEach((el) => {
     const p = TOUR.find((x) => x.key === el.dataset.km);
     const km = Math.round(haversineKm(TUN, p));
-    el.textContent = t('tour.km').replace('{n}', km.toLocaleString(lang === 'el' ? 'el-GR' : 'en-US'));
+    el.textContent = t('tour.km').replace('{n}', km.toLocaleString(LOCALE[lang]));
   });
 }
 
@@ -580,11 +600,11 @@ tabs.forEach((t, i) => {
 let credits = null;
 function renderCredits() {
   if (!credits) return;
-  const names = CREDIT_NAMES[lang];
+  const names = CREDITS_BY_LANG[lang];
   const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   $('#credit-count').textContent = `(${Object.keys(credits).length})`;
   $('#credits').innerHTML = Object.entries(credits).map(([k, v]) =>
-    `<li><a href="${esc(v.page)}" target="_blank" rel="noopener">${esc(names[k] || v['name_' + lang] || k)}</a> ${CREDIT_NAMES.by[lang]} ${esc(v.artist)}, ${esc(v.license)}</li>`).join('');
+    `<li><a href="${esc(v.page)}" target="_blank" rel="noopener">${esc(names[k] || v['name_' + lang] || v.name_en || k)}</a> ${BY[lang]} ${esc(v.artist)}, ${esc(v.license)}</li>`).join('');
 }
 fetch('img/credits.json').then((r) => r.json()).then((c) => { credits = c; renderCredits(); }).catch(() => {});
 
@@ -598,7 +618,7 @@ $$('.nav nav a').forEach((a) => {
 // ---------- enquiry form: validates, then prepares an email (the page itself sends and stores nothing) ----------
 const form = $('#enquiry');
 const TO = 'dhiamaraouch4@gmail.com';
-const t = (key) => (lang === 'el' ? EL[key] : ENGLISH[key]) ?? ENGLISH[key];
+const t = (key) => DICT[lang]?.[key] ?? ENGLISH[key];
 function fieldError(id, show) {
   const input = $('#f-' + id); const err = $('#e-' + id);
   input.setAttribute('aria-invalid', show ? 'true' : 'false');
@@ -666,13 +686,14 @@ $('#form-copy').addEventListener('click', async (e) => {
 // ---------- language ----------
 function applyMapLabels() {
   $$('.map-label').forEach((el) => {
-    const l = PLACE_LABELS[lang][el.dataset.place];
+    const l = PLACES_BY_LANG[lang][el.dataset.place];
     if (l) el.innerHTML = l[1] ? `<strong>${l[0]}</strong><span>${l[1]}</span>` : `<strong>${l[0]}</strong>`;
   });
 }
 function setLang(next, { replay = false } = {}) {
   lang = next;
   document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.title = t('meta.title');
   $$('[data-i18n]').forEach((el) => { if (!el.closest('.hero h1')) el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });

@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   const city = one(b.city, 120);
   const email = one(b.email, 200);
   const message = String(b.message ?? '').trim().slice(0, 4000);
-  const lang = b.lang === 'el' ? 'el' : 'en';
+  const lang = ['el', 'fr', 'ar'].includes(b.lang) ? b.lang : 'en';
   if (!name || !agency || !EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'invalid' });
 
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       subject: `New agency enquiry: ${agency}`,
       text: teamText,
       html: shell('New request for a presentation',
-        `<table role="presentation" cellpadding="0" cellspacing="0">${row('Name', name)}${row('Agency', agency)}${city ? row('City', city) : ''}${row('Email', email)}${row('Language', lang === 'el' ? 'Greek' : 'English')}</table>`
+        `<table role="presentation" cellpadding="0" cellspacing="0">${row('Name', name)}${row('Agency', agency)}${city ? row('City', city) : ''}${row('Email', email)}${row('Language', { el: 'Greek', fr: 'French', ar: 'Arabic' }[lang] || 'English')}</table>`
         + (message ? `<div style="margin-top:18px;padding:16px;border-radius:12px;background:#f7f2e8;font-size:15px;line-height:1.55;white-space:pre-wrap">${esc(message)}</div>` : '')
         + `<p style="margin-top:20px;font-size:13px;color:#6b7680">Reply to this email to answer ${esc(name)} directly.</p>`),
     });
@@ -78,13 +78,21 @@ export default async function handler(req, res) {
 
   // 2. confirmation to the sender. It does not repeat their free-text message,
   //    so the form cannot be used to send arbitrary text to someone else.
-  const C = lang === 'el'
-    ? { subject: 'Λάβαμε το αίτημά σας · Mahleha', title: `Ευχαριστούμε, ${name}.`,
-        body: `Το αίτημά σας για παρουσίαση για το γραφείο <b>${esc(agency)}</b> έφτασε στην ομάδα της Mahleha. Θα σας απαντήσουμε σε αυτή τη διεύθυνση.`,
-        foot: 'Αν δεν στείλατε εσείς αυτό το αίτημα, αγνοήστε αυτό το μήνυμα.' }
-    : { subject: 'We received your request · Mahleha', title: `Thank you, ${name}.`,
-        body: `Your request for a presentation for <b>${esc(agency)}</b> has reached the Mahleha team. We will reply to this address.`,
-        foot: 'If you did not send this request, you can ignore this email.' };
+  const COPY = {
+    el: { subject: 'Λάβαμε το αίτημά σας · Mahleha', title: `Ευχαριστούμε, ${name}.`,
+      body: `Το αίτημά σας για παρουσίαση για το γραφείο <b>${esc(agency)}</b> έφτασε στην ομάδα της Mahleha. Θα σας απαντήσουμε σε αυτή τη διεύθυνση.`,
+      foot: 'Αν δεν στείλατε εσείς αυτό το αίτημα, αγνοήστε αυτό το μήνυμα.' },
+    fr: { subject: 'Nous avons bien reçu votre demande · Mahleha', title: `Merci, ${name}.`,
+      body: `Votre demande de présentation pour <b>${esc(agency)}</b> est bien arrivée à l’équipe Mahleha. Nous vous répondrons à cette adresse.`,
+      foot: 'Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail.' },
+    ar: { subject: 'وصلنا طلبك · محلاها', title: `شكرًا، ${name}.`,
+      body: `وصل طلبك لعرض تقديمي لوكالة <b>${esc(agency)}</b> إلى فريق محلاها. سنرد عليك على هذا العنوان.`,
+      foot: 'إن لم تكن أنت من أرسل هذا الطلب، يمكنك تجاهل هذه الرسالة.' },
+    en: { subject: 'We received your request · Mahleha', title: `Thank you, ${name}.`,
+      body: `Your request for a presentation for <b>${esc(agency)}</b> has reached the Mahleha team. We will reply to this address.`,
+      foot: 'If you did not send this request, you can ignore this email.' },
+  };
+  const C = COPY[lang];
   let confirm = true;
   try {
     await transport.sendMail({
@@ -93,7 +101,7 @@ export default async function handler(req, res) {
       replyTo: team,
       subject: C.subject,
       text: `${C.title}\n\n${C.body.replace(/<[^>]+>/g, '')}\n\n${C.foot}`,
-      html: shell(esc(C.title), `<p style="font-size:15px;line-height:1.6;margin:0">${C.body}</p><p style="margin-top:22px;font-size:12px;color:#6b7680">${C.foot}</p>`),
+      html: shell(esc(C.title), `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="text-align:${lang === 'ar' ? 'right' : 'left'}"><p style="font-size:15px;line-height:1.6;margin:0">${C.body}</p><p style="margin-top:22px;font-size:12px;color:#6b7680">${C.foot}</p></div>`),
     });
   } catch (err) {
     console.error('confirmation failed', err?.code || err?.message);
