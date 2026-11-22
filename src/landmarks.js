@@ -18,12 +18,12 @@ function mats() {
     stone: std(0xcfc2a8, { emissive: 0x1e1b16 }), stoneDk: std(0x9f8d74, { emissive: 0x100d0a }), marble: std(0xdcd4c4, { roughness: 0.7, emissive: 0x1c1a16 }),
     dome: std(0xe6e0d4, { emissive: 0x1c1b18 }),
     rock: std(0x8f8575), earth: std(0x9c8670, { side: THREE.DoubleSide, emissive: 0x0e0b08 }), sand: std(0xc4b59c, { emissive: 0x141210 }), dune: std(0xb59d7c, { emissive: 0x0d0a07 }),
-    hill: std(0x667a4c, { side: THREE.DoubleSide, emissive: 0x080d04 }), grass: std(0x4d7140, { emissive: 0x060c04 }),
+    hill: std(0x56693f, { side: THREE.DoubleSide, emissive: 0x060a03 }), grass: std(0x4d7140, { emissive: 0x060c04 }),
     hollow: std(0x1c1916, { roughness: 1 }), olive: std(0x4f7a3a, { emissive: 0x081205 }), palm: std(0x3f7f3a, { side: THREE.DoubleSide, emissive: 0x071205 }), trunk: std(0x6a5440),
     water: std(0x2a6fb8, { roughness: 0.15, flatShading: false, envMapIntensity: 0.9 }),
     hull: std(0xf4f0e8, { roughness: 0.55 }), blue: std(0x2f7de1, { roughness: 0.45 }), wood: std(0x6d5a47),
     sail: std(0xf6f2ea, { side: THREE.DoubleSide, roughness: 0.85 }),
-    white: std(0xeeebe4, { emissive: 0x22211e }), roof: std(0x9e3a34, { emissive: 0x140505 }), snow: std(0xf5f7fa, { emissive: 0x2a2c30 }),
+    white: std(0xeeebe4, { emissive: 0x22211e }), roof: std(0x9e3a34, { emissive: 0x140505 }), snow: std(0xf5f7fa, { side: THREE.DoubleSide, emissive: 0x2a2c30 }),
     forest: std(0x355a33, { emissive: 0x061006 }), brick: std(0xa4947e, { emissive: 0x0f0d0a }),
   };
   return M;
@@ -398,8 +398,8 @@ function hammamet() {
   // the walled medina on the shore: ramparts with towers, whitewashed houses inside,
   // the square minaret of the Great Mosque, and the beach in front
   const k = new Kit(); const rand = rng(53);
-  k.box('sand', 0.8, 0.014, 0.22, 0, 0, 0.3);
-  k.box('earth', 0.8, 0.016, 0.42, 0, 0, -0.08);
+  k.box('dune', 0.74, 0.012, 0.1, 0, 0, 0.2);
+  k.box('sand', 0.74, 0.016, 0.42, 0, 0, -0.06);
   const W = 0.46; const D = 0.34; const wh = 0.07; const cz = -0.06;
   for (const [x, z, w, d] of [[0, cz - D / 2, W, 0.022], [0, cz + D / 2, W, 0.022], [-W / 2, cz, 0.022, D], [W / 2, cz, 0.022, D]]) k.box('stone', w, wh, d, x, 0.016, z);
   for (const [x, z] of [[-W / 2, cz - D / 2], [W / 2, cz - D / 2], [-W / 2, cz + D / 2], [W / 2, cz + D / 2]]) k.cyl('stoneDk', 0.032, 0.036, wh + 0.03, x, 0.016, z, 10);
@@ -555,11 +555,11 @@ const SITES = [
   { key: 'matmata', lon: 9.967, lat: 33.5426, make: matmata, s: 0.3, ry: 0, leg: 'tn', d: 0.34 },
   { key: 'bizerte', lon: 9.8739, lat: 37.2744, make: bizerte, s: 0.21, ry: 0, leg: 'tn', d: 0.05, dx: 0.05, dz: -0.03 },
   { key: 'aindraham', lon: 8.687, lat: 36.779, make: aindraham, s: 0.27, ry: 0, leg: 'tn', d: 0.1 },
-  { key: 'hammamet', lon: 10.6153, lat: 36.3993, make: hammamet, s: 0.24, ry: 0, leg: 'tn', d: 0.18 },
+  { key: 'hammamet', lon: 10.6153, lat: 36.3993, make: hammamet, s: 0.24, ry: 0, leg: 'tn', d: 0.18, dz: -0.035 },
   { key: 'djerba', lon: 10.8592, lat: 33.8139, make: ghriba, s: 0.22, ry: 0, leg: 'tn', d: 0.36 },
   { key: 'tozeur', lon: 8.1335, lat: 33.9197, make: tozeur, s: 0.3, ry: 0, leg: 'tn', d: 0.42 },
-  { key: 'boat', lon: 10.88, lat: 33.95, make: boat, s: 0.11, ry: 0.6, leg: 'tn', d: 0.38, sea: true },
-  { key: 'boat2', lon: 10.98, lat: 33.92, make: boat, s: 0.09, ry: -2.2, leg: 'tn', d: 0.4, sea: true },
+  { key: 'boat', lon: 10.86, lat: 33.99, make: boat, s: 0.07, ry: 0.6, leg: 'tn', d: 0.38, sea: true },
+  { key: 'boat2', lon: 10.99, lat: 33.96, make: boat, s: 0.06, ry: -2.2, leg: 'tn', d: 0.4, sea: true },
   { key: 'parthenon', lon: 23.7267, lat: 37.9715, make: acropolis, s: 0.26, ry: 0, leg: 'gr', d: 0, label: true },
   { key: 'sounion', lon: 24.0247, lat: 37.6503, make: sounion, s: 0.15, ry: 0, leg: 'gr', d: 0.15, label: true },
   { key: 'epidaurus', lon: 23.0794, lat: 37.5961, make: epidaurus, s: 0.17, ry: 0, leg: 'gr', d: 0.25, label: true },
@@ -585,7 +585,7 @@ export function buildLandmarks(project, landH, stops = []) {
       it.holder.visible = r > 0.002;
       if (!it.holder.visible) continue;
       const e = reduced ? r : ease(r);
-      const far = cam ? THREE.MathUtils.clamp(cam.distanceTo(it.pos) / 2.6, 1, it.leg === 'tn' ? 1.7 : 1.3) : 1;
+      const far = cam ? THREE.MathUtils.clamp(cam.distanceTo(it.pos) / 2.6, 1, it.sea ? 1.25 : it.leg === 'tn' ? 1.7 : 1.3) : 1;
       it.far = it.far ? it.far + (far - it.far) * 0.15 : far;
       const on = it.stop >= 0 ? tour * (1 - THREE.MathUtils.smoothstep(Math.abs(hop - it.stop), 0, 0.6)) : 0;
       it.lift = it.lift ? it.lift + (on - it.lift) * 0.08 : on;

@@ -1042,3 +1042,17 @@ h1, h2, h3 { text-wrap: balance; }
 .leaving .flap i.set { color: #f1e6d1; }
 .leaving .flap:first-of-type i { color: #b9d4ea; }
 .leaving .arrivals { background: rgba(241, 230, 209, .85); box-shadow: inset 0 0 0 1px rgba(43, 38, 32, .12), 0 20px 50px -24px rgba(43, 38, 32, .35); }
+
+/* ---------- the cabin, seen down the aisle ---------- */
+.cabin-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cabin-wall, .cabin-windows, .cabin-bins, .seat { display: none; }
+.leaving .cabin { background: #e2dacb; }
+
+/* the window we look in through: its frame rides on the edge of the opening, then falls away as we pass inside */
+.cabin-porthole { --cv: 0; position: fixed; left: 50%; top: 46%; z-index: 7; pointer-events: none; visibility: hidden;
+  width: calc((10vw + var(--cv) * 200vw) * (1.16 - var(--cv) * 0.16)); height: calc((18vh + var(--cv) * 200vh) * (1.16 - var(--cv) * 0.16));
+  transform: translate(-50%, -50%); border-radius: 50%;
+  box-shadow: 0 0 0 10px #2a2f38, 0 0 0 26px #efe9de, 0 0 0 30px #c9c0b1, 0 0 0 34px rgba(0, 0, 0, .12), 0 30px 60px 20px rgba(0, 0, 0, .25), inset 0 0 40px rgba(0, 0, 0, .35);
+  opacity: clamp(0, calc((0.6 - var(--cv)) * 3), 1); }
+.leaving .cabin-porthole { visibility: visible; }
+@media (max-width: 760px) { .cabin-porthole { box-shadow: 0 0 0 6px #2a2f38, 0 0 0 16px #efe9de, 0 0 0 19px #c9c0b1, 0 20px 40px 10px rgba(0, 0, 0, .25), inset 0 0 30px rgba(0, 0, 0, .35); } }

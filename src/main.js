@@ -491,6 +491,7 @@ function updateCabin() {
   const raw = leaving ? Math.min(enter, exit) : 0;
   const vis = raw * raw * (3 - 2 * raw); // smoothstep
   $('.cabin').style.setProperty('--cv', vis.toFixed(4));
+  $('.cabin-porthole').style.setProperty('--cv', vis.toFixed(4));
   const on = vis > 0.5;
   if (on !== cabinOn) { cabinOn = on; document.documentElement.classList.toggle('in-cabin', on); }
   if (flight) flight.state.cabin = vis;
