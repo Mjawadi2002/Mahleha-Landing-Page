@@ -496,6 +496,8 @@ function updateCabin() {
   if (on !== cabinOn) { cabinOn = on; document.documentElement.classList.toggle('in-cabin', on); }
   if (flight) flight.state.cabin = vis;
   $('.cabin').style.visibility = vis > 0.002 ? 'visible' : 'hidden';
+  // the window frame belongs to the moment of entering only
+  $('.cabin-porthole').style.visibility = vis > 0.002 && vis < 0.6 ? 'visible' : 'hidden';
   if (!leaving) return;
   // scrolling up through the section plays the unpacking forward
   const p = Math.min(1, Math.max(0, -r.top / Math.max(1, sec.offsetHeight - innerHeight)));
