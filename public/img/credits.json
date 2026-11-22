@@ -90,15 +90,6 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "artist": "IssamBarhoumi"
   },
-  "carthage-1": {
-    "title": "File:Antonine Baths, Carthage.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Antonine_Baths,_Carthage.jpg",
-    "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
-    "artist": "upyernoz",
-    "name_en": "Antonine Baths",
-    "name_el": "Λουτρά του Αντωνίνου"
-  },
   "carthage-2": {
     "title": "File:Carthage-1958-PortsPuniques.jpg",
     "page": "https://commons.wikimedia.org/wiki/File:Carthage-1958-PortsPuniques.jpg",
@@ -108,42 +99,6 @@
     "name_en": "The Punic ports from the air",
     "name_el": "Τα πουνικά λιμάνια από ψηλά"
   },
-  "carthage-3": {
-    "title": "File:Quartier Punique.JPG",
-    "page": "https://commons.wikimedia.org/wiki/File:Quartier_Punique.JPG",
-    "license": "Public domain",
-    "licenseUrl": "",
-    "artist": "No machine-readable author provided. BishkekRocks assumed (based on copyright claims).",
-    "name_en": "Punic quarter, Byrsa hill",
-    "name_el": "Πουνική συνοικία, λόφος Βύρσα"
-  },
-  "carthage-4": {
-    "title": "File:Roman Theatre (not ampitheatre), Carthage. (52763292067).jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Roman_Theatre_(not_ampitheatre),_Carthage._(52763292067).jpg",
-    "license": "CC BY-SA 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
-    "artist": "Tracey Hind from Aups, France",
-    "name_en": "Roman theatre",
-    "name_el": "Ρωμαϊκό θέατρο"
-  },
-  "sidi-1": {
-    "title": "File:Doors of Sidi Bou Said 002.JPG",
-    "page": "https://commons.wikimedia.org/wiki/File:Doors_of_Sidi_Bou_Said_002.JPG",
-    "license": "CC BY-SA 2.5",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
-    "artist": "User:SvenZ",
-    "name_en": "Blue studded doors",
-    "name_el": "Μπλε πόρτες με καρφιά"
-  },
-  "sidi-2": {
-    "title": "File:Sidi Bou Said Street scene.JPG",
-    "page": "https://commons.wikimedia.org/wiki/File:Sidi_Bou_Said_Street_scene.JPG",
-    "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-    "artist": "Zinneke",
-    "name_en": "Up the village lanes",
-    "name_el": "Στα δρομάκια του χωριού"
-  },
   "sidi-3": {
     "title": "File:Tunezja, Sidi Bou Said, CAFE des Delices - panoramio.jpg",
     "page": "https://commons.wikimedia.org/wiki/File:Tunezja,_Sidi_Bou_Said,_CAFE_des_Delices_-_panoramio.jpg",
@@ -152,51 +107,6 @@
     "artist": "Mietek Ł",
     "name_en": "Café des Délices above the marina",
     "name_el": "Το Café des Délices πάνω από τη μαρίνα"
-  },
-  "sidi-4": {
-    "title": "File:SidiBouSaidHarbour2.JPG",
-    "page": "https://commons.wikimedia.org/wiki/File:SidiBouSaidHarbour2.JPG",
-    "license": "CC BY-SA 3.0",
-    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "artist": "Citizen59",
-    "name_en": "The marina below the village",
-    "name_el": "Η μαρίνα κάτω από το χωριό"
-  },
-  "marsa-1": {
-    "title": "File:Golden Hour -Corniche la Marsa-.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Golden_Hour_-Corniche_la_Marsa-.jpg",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-    "artist": "Krabaa.anis",
-    "name_en": "The corniche at golden hour",
-    "name_el": "Ο παραλιακός δρόμος το σούρουπο"
-  },
-  "marsa-2": {
-    "title": "File:La marsa 1.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:La_marsa_1.jpg",
-    "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
-    "artist": "Seif Allah Bouneb",
-    "name_en": "On the beach",
-    "name_el": "Στην παραλία"
-  },
-  "marsa-3": {
-    "title": "File:Ahmed Bey Palace 10.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Ahmed_Bey_Palace_10.jpg",
-    "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
-    "artist": "Bernard Gagnon",
-    "name_en": "Ahmed Bey Palace",
-    "name_el": "Το παλάτι του Αχμέτ Μπέη"
-  },
-  "marsa-4": {
-    "title": "File:Café Le Saf-Saf photo2 قهوة الصفصاف.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Caf%C3%A9_Le_Saf-Saf_photo2_%D9%82%D9%87%D9%88%D8%A9_%D8%A7%D9%84%D8%B5%D9%81%D8%B5%D8%A7%D9%81.jpg",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-    "artist": "Sami Mlouhi",
-    "name_en": "Café Saf-Saf",
-    "name_el": "Το καφέ Saf-Saf"
   },
   "bizerte-1": {
     "title": "File:The old port of Bizerte 05.jpg",

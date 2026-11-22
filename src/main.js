@@ -146,7 +146,8 @@ function buildFlightTimeline() {
   const marks = [];
   $$('[data-chapter]').forEach((sec) => {
     marks.push({ el: sec, key: sec.dataset.chapter });
-    $$('[data-place]', sec).forEach((a) => marks.push({ el: a, key: a.dataset.place, offset: -0.35 }));
+    // a place's card switches when its mark reaches 62% of the screen: the camera hops there around that moment
+    $$('[data-place]', sec).forEach((a) => marks.push({ el: a, key: a.dataset.place, offset: -0.62, hop: true }));
   });
   let tl;
   const make = () => {
@@ -155,7 +156,9 @@ function buildFlightTimeline() {
     const pos = marks.map((m) => Math.max(0, m.el.getBoundingClientRect().top + scrollY + (m.offset ?? 0) * innerHeight));
     for (let i = 0; i < marks.length - 1; i++) {
       const to = framed(marks[i + 1].key);
-      const from = pos[i]; const dur = Math.max(1, pos[i + 1] - from);
+      let from = pos[i]; let dur = Math.max(1, pos[i + 1] - from);
+      // between two places: hold still on the current one, then a short hop centred on the card switch
+      if (marks[i].hop && marks[i + 1].hop) { const half = innerHeight * 0.18; from = pos[i + 1] - half; dur = half * 2; }
       const { labels, ...rest } = to;
       tl.to(st, { ...rest, duration: dur, ease: 'sine.inOut' }, from);
       tl.to(st.labels, { ...labels, duration: dur * 0.6, ease: 'none' }, from + dur * 0.4);

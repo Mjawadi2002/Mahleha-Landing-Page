@@ -1,6 +1,6 @@
 # Mahleha landing page
 
-Scroll-story landing page for Mahleha: a flight from Athens to Tunis, then a tour of twelve Tunisian places on a 3D map. English and Greek.
+Scroll-story landing page for Mahleha: a flight from Athens to Tunis, then a tour of ten Tunisian places on a 3D map. English and Greek.
 
 Built with Vite, three.js, GSAP ScrollTrigger and Lenis.
 

@@ -1,10 +1,9 @@
-// The tour: twelve places in the order the map hops between them.
+// The tour: ten places in the order the map hops between them.
+// 'carthage' is the Tunis stop: Carthage, Sidi Bou Said and La Marsa, neighbours in the northern suburbs.
 // Coordinates are the sites themselves (not city centres). `unesco` links the
 // World Heritage listing where one exists. Shared by the map and the page, no three.js here.
 export const TOUR = [
-  { key: 'carthage', lon: 10.3317, lat: 36.8528, h: 1.5, unesco: { year: 1979, url: 'https://whc.unesco.org/en/list/37/' } },
-  { key: 'sidi', lon: 10.3417, lat: 36.8708, h: 1.2 },
-  { key: 'marsa', lon: 10.3247, lat: 36.8782, h: 1.4 },
+  { key: 'carthage', lon: 10.3317, lat: 36.8528, h: 1.9, unesco: { year: 1979, url: 'https://whc.unesco.org/en/list/37/' } },
   { key: 'bizerte', lon: 9.8739, lat: 37.2744, h: 2.0 },
   { key: 'aindraham', lon: 8.687, lat: 36.779, h: 2.2 },
   { key: 'dougga', lon: 9.2183, lat: 36.4236, h: 2.0, unesco: { year: 1997, url: 'https://whc.unesco.org/en/list/794/' } },
